@@ -41,8 +41,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
       return;
     }
 
-    const newAttachments: FileAttachment[] = [];
-
+    // Validate all files first
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
@@ -63,22 +62,26 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
         }
         return;
       }
+    }
 
-      // Convert file to base64 data URL
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve(reader.result as string);
+    // Process all files in parallel
+    const filePromises = Array.from(files).map(file => {
+      return new Promise<FileAttachment>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve({
+            id: crypto.randomUUID(),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: reader.result as string,
+          });
+        };
         reader.readAsDataURL(file);
       });
+    });
 
-      newAttachments.push({
-        id: `${Date.now()}-${Math.random()}`,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        data: dataUrl,
-      });
-    }
+    const newAttachments = await Promise.all(filePromises);
 
     setAttachments(prev => [...prev, ...newAttachments]);
 
@@ -190,7 +193,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
               placeholder="TYPE YOUR MESSAGE..."
               disabled={disabled}
               rows={1}
-              className="resize-none w-full !bg-white dark:!bg-black !border-4 !border-black dark:!border-white focus:!border-black dark:focus:!border-white !ring-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] font-bold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-black placeholder:uppercase"
+              className="resize-none w-full !bg-white dark:!bg-black !text-black dark:!text-white !border-4 !border-black dark:!border-white focus:!border-black dark:focus:!border-white !ring-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] font-bold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-black placeholder:uppercase"
               style={{ minHeight: '44px', maxHeight: '200px' }}
             />
           </div>

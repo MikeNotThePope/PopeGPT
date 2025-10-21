@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button, Sidebar as FlowbiteSidebar } from 'flowbite-react';
 import { HiPlus, HiChat, HiX } from 'react-icons/hi';
 import { Conversation } from '@/lib/types';
@@ -23,7 +23,7 @@ export default function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
-  const appName = `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`;
+  const appName = useMemo(() => `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`, []);
 
   return (
     <>

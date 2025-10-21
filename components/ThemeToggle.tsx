@@ -1,11 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { HiMoon, HiSun } from 'react-icons/hi';
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Unified favicon update function
+  const updateFavicon = useCallback((url: string) => {
+    const oldFavicon = document.getElementById('favicon');
+    if (oldFavicon) oldFavicon.remove();
+
+    const newFavicon = document.createElement('link');
+    newFavicon.id = 'favicon';
+    newFavicon.rel = 'icon';
+    newFavicon.type = 'image/svg+xml';
+    newFavicon.href = url;
+    document.head.appendChild(newFavicon);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -34,21 +47,10 @@ export default function ThemeToggle() {
 
         if (newIsDark) {
           document.documentElement.classList.add('dark');
-          updateFaviconDirect('/api/favicon-dark');
+          updateFavicon('/api/favicon-dark');
         } else {
           document.documentElement.classList.remove('dark');
-          updateFaviconDirect('/api/favicon');
-        }
-
-        function updateFaviconDirect(url: string) {
-          const oldFavicon = document.getElementById('favicon');
-          if (oldFavicon) oldFavicon.remove();
-          const newFavicon = document.createElement('link');
-          newFavicon.id = 'favicon';
-          newFavicon.rel = 'icon';
-          newFavicon.type = 'image/svg+xml';
-          newFavicon.href = url;
-          document.head.appendChild(newFavicon);
+          updateFavicon('/api/favicon');
         }
       }
     };
@@ -58,7 +60,7 @@ export default function ThemeToggle() {
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, []);
+  }, [updateFavicon]);
 
   const toggleTheme = () => {
     const newIsDark = !isDark;
@@ -73,22 +75,6 @@ export default function ThemeToggle() {
       localStorage.setItem('theme', 'light');
       updateFavicon('/api/favicon');
     }
-  };
-
-  const updateFavicon = (url: string) => {
-    // Remove old favicon
-    const oldFavicon = document.getElementById('favicon');
-    if (oldFavicon) {
-      oldFavicon.remove();
-    }
-
-    // Create and add new favicon
-    const newFavicon = document.createElement('link');
-    newFavicon.id = 'favicon';
-    newFavicon.rel = 'icon';
-    newFavicon.type = 'image/svg+xml';
-    newFavicon.href = url;
-    document.head.appendChild(newFavicon);
   };
 
   // Avoid hydration mismatch

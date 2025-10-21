@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { MAX_REQUEST_BODY_SIZE, MAX_ATTACHMENTS, MAX_MESSAGE_LENGTH, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS } from '@/lib/constants';
+import { FileAttachment, Message } from '@/lib/types';
 
 export const runtime = 'edge';
 
@@ -37,20 +38,6 @@ if (typeof setInterval !== 'undefined') {
       }
     });
   }, 60000); // Clean up every minute
-}
-
-interface FileAttachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  data: string; // base64 data URL
-}
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  attachments?: FileAttachment[];
 }
 
 interface ContentBlock {
@@ -195,7 +182,9 @@ You have access to various tools and capabilities to help users with their tasks
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenRouter API error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('OpenRouter API error:', error);
+      }
       return new Response(`OpenRouter API error: ${response.statusText}`, {
         status: response.status
       });
@@ -253,13 +242,17 @@ You have access to various tools and capabilities to help users with their tasks
                   }
                 } catch (e) {
                   // Skip invalid JSON
-                  console.error('Error parsing chunk:', e);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.error('Error parsing chunk:', e);
+                  }
                 }
               }
             }
           }
         } catch (error) {
-          console.error('Stream error:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Stream error:', error);
+          }
           controller.error(error);
         }
       },
@@ -275,7 +268,9 @@ You have access to various tools and capabilities to help users with their tasks
       },
     });
   } catch (error) {
-    console.error('API route error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API route error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }

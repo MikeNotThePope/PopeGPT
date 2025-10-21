@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import Message from './Message';
 import { Message as MessageType } from '@/lib/types';
 
@@ -13,7 +13,7 @@ interface MessageListProps {
 export default function MessageList({ messages, isStreaming, isDark = false }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const appName = `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`;
+  const appName = useMemo(() => `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

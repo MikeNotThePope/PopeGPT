@@ -80,59 +80,69 @@ export default function ChatInterface() {
 
       let assistantMessage = '';
       let hasStartedMessage = false;
-      let updateTimeout: NodeJS.Timeout | null = null;
+      let updateFrameId: number | null = null;
 
-      // Throttle updates to every 50ms for smooth rendering without overwhelming React
+      // Throttle updates using requestAnimationFrame for smooth rendering
       const scheduleUpdate = () => {
-        if (updateTimeout) return;
+        if (updateFrameId) return;
 
-        updateTimeout = setTimeout(() => {
+        updateFrameId = requestAnimationFrame(() => {
           if (!hasStartedMessage) {
             addMessage(assistantMessage, 'assistant');
             hasStartedMessage = true;
           } else {
             updateLastMessage(assistantMessage);
           }
-          updateTimeout = null;
-        }, 16); // Update every 16ms (~60fps) for buttery smooth streaming
+          updateFrameId = null;
+        });
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
 
-        if (done) break;
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
 
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.content) {
-                assistantMessage += parsed.content;
-                scheduleUpdate();
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  assistantMessage += parsed.content;
+                  scheduleUpdate();
+                }
+              } catch (e) {
+                // Skip invalid JSON chunks from streaming
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('Invalid JSON chunk:', line, e);
+                }
               }
-            } catch (e) {
-              // Skip invalid JSON
             }
           }
+        }
+      } finally {
+        // Cleanup animation frame if still pending
+        if (updateFrameId) {
+          cancelAnimationFrame(updateFrameId);
+          updateFrameId = null;
         }
       }
 
       // Final update to ensure all content is shown
-      if (updateTimeout) {
-        clearTimeout(updateTimeout);
-      }
       if (!hasStartedMessage) {
         addMessage(assistantMessage, 'assistant');
       } else {
         updateLastMessage(assistantMessage);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error sending message:', error);
+      }
       addMessage(
         'Sorry, there was an error processing your request. Please try again.',
         'assistant'

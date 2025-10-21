@@ -30,7 +30,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const addMessage = useCallback((content: string, role: 'user' | 'assistant', attachments?: FileAttachment[]) => {
     const message: Message = {
-      id: Date.now().toString() + Math.random(),
+      id: crypto.randomUUID(),
       role,
       content,
       timestamp: Date.now(),
