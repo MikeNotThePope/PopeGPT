@@ -28,34 +28,34 @@ export default function Sidebar({
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/80 z-20 lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-r border-gray-200/50 dark:border-gray-700/50 shadow-xl transform transition-all duration-300 ease-in-out ${
+        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-lime-300 dark:bg-pink-500 border-r-4 border-black dark:border-white transform transition-transform duration-200 ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="p-4 border-b-4 border-black dark:border-white">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
                 PopeGPT
               </h1>
               <button
                 onClick={onClose}
-                className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-all hover:rotate-90 duration-200"
+                className="lg:hidden bg-black dark:bg-white text-white dark:text-black p-2 border-2 border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors"
               >
-                <HiX className="w-6 h-6" />
+                <HiX className="w-5 h-5" />
               </button>
             </div>
             <button
               onClick={onNewChat}
-              className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black border-4 border-black dark:border-white font-black uppercase flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]"
             >
               <HiPlus className="h-5 w-5" />
               New Chat
@@ -63,7 +63,7 @@ export default function Sidebar({
           </div>
 
           {/* Conversation list */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent p-2">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-black dark:scrollbar-thumb-white scrollbar-track-transparent p-2">
             {conversations.map((conversation) => (
               <button
                 key={conversation.id}
@@ -71,24 +71,22 @@ export default function Sidebar({
                   onSelectConversation(conversation.id);
                   onClose();
                 }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl mb-1.5 transition-all flex items-center gap-2 group ${
+                className={`w-full text-left px-3 py-3 mb-2 transition-all flex items-center gap-2 border-3 font-bold ${
                   conversation.id === currentConversationId
-                    ? 'bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 text-blue-900 dark:text-blue-100 shadow-md'
-                    : 'hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:shadow-sm'
+                    ? 'bg-yellow-300 dark:bg-cyan-400 text-black border-4 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]'
+                    : 'bg-white/50 dark:bg-black/30 text-black dark:text-white border-2 border-black dark:border-white hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]'
                 }`}
               >
-                <HiChat className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                  conversation.id === currentConversationId ? 'text-blue-600 dark:text-blue-400' : ''
-                }`} />
-                <span className="truncate text-sm font-medium">{conversation.title}</span>
+                <HiChat className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate text-xs uppercase">{conversation.title}</span>
               </button>
             ))}
           </div>
 
           {/* Footer with theme toggle */}
-          <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-b from-transparent to-gray-50/50 dark:to-gray-800/50">
+          <div className="p-4 border-t-4 border-black dark:border-white">
             <ThemeToggle />
-            <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center font-medium">
+            <div className="mt-3 text-[10px] text-black dark:text-white text-center font-black uppercase">
               Powered by Claude 3 Haiku
             </div>
           </div>

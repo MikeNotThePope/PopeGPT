@@ -23,41 +23,40 @@ export default function MessageList({ messages, isStreaming, isDark = false }: M
   }, [messages, isStreaming]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+    <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-black dark:scrollbar-thumb-white scrollbar-track-transparent">
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in">
-          <div className="mb-6 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent relative">
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="mb-8 p-6 bg-yellow-300 dark:bg-cyan-400 border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+            <h2 className="text-6xl font-black text-black uppercase tracking-tight">
               PopeGPT
             </h2>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md text-lg mb-8">
-            Welcome! Start a conversation by typing a message below.
+          <p className="text-black dark:text-white max-w-md text-xl font-bold mb-8 uppercase">
+            Start Chatting Now!
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
             {[
-              { icon: "💡", text: "Ask me anything" },
-              { icon: "🚀", text: "Get creative ideas" },
-              { icon: "📝", text: "Help with writing" }
+              { icon: "💡", text: "Ask me anything", bg: "bg-pink-400" },
+              { icon: "🚀", text: "Get creative ideas", bg: "bg-cyan-400" },
+              { icon: "📝", text: "Help with writing", bg: "bg-lime-400" }
             ].map((item, i) => (
-              <div key={i} className="p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all hover:scale-105">
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{item.text}</div>
+              <div key={i} className={`p-5 ${item.bg} border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
+                <div className="text-4xl mb-2">{item.icon}</div>
+                <div className="text-sm text-black font-black uppercase">{item.text}</div>
               </div>
             ))}
           </div>
         </div>
       ) : (
         <>
-          {messages.map((message, index) => (
-            <div key={message.id} className="animate-slide-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
+          {messages.map((message) => (
+            <div key={message.id}>
               <Message message={message} isDark={isDark} />
             </div>
           ))}
           {isStreaming && (
-            <div className="flex justify-start mb-4 animate-fade-in">
-              <div className="bg-white dark:bg-gray-700 rounded-2xl px-5 py-4 shadow-md border border-gray-200/50 dark:border-gray-600/50">
+            <div className="flex justify-start mb-4">
+              <div className="bg-white dark:bg-black border-4 border-black dark:border-white px-6 py-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
                 <Spinner size="sm" />
               </div>
             </div>

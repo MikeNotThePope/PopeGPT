@@ -26,9 +26,9 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* Custom scrollbar styling */
+/* Neo-brutalist scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -36,24 +36,26 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
+  background: #000;
+  border-radius: 0;
+  border: 2px solid #000;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #333;
 }
 
 /* Dark mode scrollbar */
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #555;
+  background: #fff;
+  border: 2px solid #fff;
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #888;
+  background: #ccc;
 }
 
-/* Custom animations */
+/* Neo-brutalist animations - snappy and direct */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -63,42 +65,43 @@ body {
   }
 }
 
-@keyframes slide-in-up {
-  from {
+@keyframes pop-in {
+  0% {
+    transform: scale(0.8);
     opacity: 0;
-    transform: translateY(10px);
   }
-  to {
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.2s linear;
 }
 
-.animate-slide-in-up {
-  animation: slide-in-up 0.3s ease-out forwards;
-  opacity: 0;
+.animate-pop-in {
+  animation: pop-in 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.animate-slide-in-left {
-  animation: slide-in-left 0.3s ease-out;
+/* Snappy transitions for neo-brutalist feel */
+button, a {
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Smooth transitions for all interactive elements */
-button, a, input, textarea {
-  transition: all 0.2s ease-in-out;
+input, textarea {
+  transition: border 0.1s linear, box-shadow 0.1s linear;
+}
+
+/* Bold focus states */
+*:focus-visible {
+  outline: 4px solid #000 !important;
+  outline-offset: 2px !important;
+}
+
+.dark *:focus-visible {
+  outline: 4px solid #fff !important;
 }

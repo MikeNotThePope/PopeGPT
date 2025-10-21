@@ -49,7 +49,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
   };
 
   return (
-    <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-4 shadow-lg">
+    <div className="border-t-4 border-black dark:border-white bg-cyan-300 dark:bg-purple-600 px-4 py-4">
       <div className="flex items-stretch gap-3 max-w-4xl mx-auto">
         <div className="flex-1 flex items-end">
           <Textarea
@@ -57,10 +57,10 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
             value={input}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message... (Shift+Enter for new line)"
+            placeholder="TYPE YOUR MESSAGE..."
             disabled={disabled}
             rows={1}
-            className="resize-none w-full !bg-gray-50 dark:!bg-gray-700/50 !border-gray-300/50 dark:!border-gray-600/50 focus:!border-blue-500 focus:!ring-blue-500/20 !rounded-xl shadow-sm"
+            className="resize-none w-full !bg-white dark:!bg-black !border-4 !border-black dark:!border-white focus:!border-black dark:focus:!border-white !ring-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] font-bold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-black placeholder:uppercase"
             style={{ minHeight: '44px', maxHeight: '200px' }}
           />
         </div>
@@ -68,12 +68,12 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
           <button
             onClick={handleSend}
             disabled={disabled || !input.trim()}
-            className="h-11 w-32 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-medium flex items-center gap-2 transition-all justify-center shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
+            className="h-11 w-32 bg-black dark:bg-white text-white dark:text-black border-4 border-black dark:border-white font-black uppercase flex items-center gap-2 transition-all justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:hover:translate-x-0 disabled:hover:translate-y-0"
           >
           {disabled ? (
             <>
               <Spinner size="sm" />
-              <span>Sending...</span>
+              <span>Sending</span>
             </>
           ) : (
             <>
