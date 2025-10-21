@@ -98,12 +98,15 @@ describe('ChatContext', () => {
     expect(currentConv?.messages[0].content).toBe('Updated response');
   });
 
-  it('should create a new conversation', () => {
+  it('should create a new conversation', async () => {
     const { result } = renderHook(() => useChatContext(), {
       wrapper: ChatProvider,
     });
 
     const initialConvId = result.current.currentConversationId;
+
+    // Add a small delay to ensure different timestamps
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     act(() => {
       result.current.createNewConversation();
@@ -113,7 +116,7 @@ describe('ChatContext', () => {
     expect(result.current.currentConversationId).not.toBe(initialConvId);
   });
 
-  it('should switch conversations', () => {
+  it('should switch conversations', async () => {
     const { result } = renderHook(() => useChatContext(), {
       wrapper: ChatProvider,
     });
@@ -123,6 +126,9 @@ describe('ChatContext', () => {
     });
 
     const firstConvId = result.current.currentConversationId;
+
+    // Add delay to ensure different timestamps
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     act(() => {
       result.current.createNewConversation();
@@ -137,6 +143,8 @@ describe('ChatContext', () => {
     expect(result.current.currentConversationId).toBe(firstConvId);
 
     const currentConv = result.current.getCurrentConversation();
+    expect(currentConv).toBeDefined();
+    expect(currentConv?.messages).toHaveLength(1);
     expect(currentConv?.messages[0].content).toBe('Message in first chat');
   });
 

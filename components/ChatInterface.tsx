@@ -123,7 +123,7 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-800">
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Sidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -135,11 +135,12 @@ export default function ChatInterface() {
 
       <div className="flex flex-col flex-1">
         {/* Mobile header */}
-        <div className="lg:hidden border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+        <div className="lg:hidden border-b border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-3 shadow-sm">
           <Button
             color="gray"
             size="sm"
             onClick={() => setIsSidebarOpen(true)}
+            className="hover:scale-105 transition-transform"
           >
             <HiMenu className="w-5 h-5" />
           </Button>

@@ -49,7 +49,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
   };
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4">
+    <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-4 shadow-lg">
       <div className="flex items-stretch gap-3 max-w-4xl mx-auto">
         <div className="flex-1 flex items-end">
           <Textarea
@@ -60,7 +60,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
             placeholder="Type your message... (Shift+Enter for new line)"
             disabled={disabled}
             rows={1}
-            className="resize-none w-full"
+            className="resize-none w-full !bg-gray-50 dark:!bg-gray-700/50 !border-gray-300/50 dark:!border-gray-600/50 focus:!border-blue-500 focus:!ring-blue-500/20 !rounded-xl shadow-sm"
             style={{ minHeight: '44px', maxHeight: '200px' }}
           />
         </div>
@@ -68,7 +68,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
           <button
             onClick={handleSend}
             disabled={disabled || !input.trim()}
-            className="h-11 w-32 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium flex items-center gap-2 transition-colors justify-center"
+            className="h-11 w-32 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-medium flex items-center gap-2 transition-all justify-center shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
           >
           {disabled ? (
             <>

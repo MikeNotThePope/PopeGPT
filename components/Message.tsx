@@ -30,17 +30,17 @@ export default function Message({ message, isDark = false }: MessageProps) {
     <div
       className={`flex w-full ${
         isUser ? 'justify-end' : 'justify-start'
-      } mb-4`}
+      } mb-6 group`}
     >
       <div
-        className={`max-w-[80%] rounded-lg px-4 py-3 ${
+        className={`max-w-[80%] rounded-2xl px-5 py-3 transition-all duration-200 ${
           isUser
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+            ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
+            : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md border border-gray-200/50 dark:border-gray-600/50 hover:shadow-lg'
         }`}
       >
         {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
         ) : (
           <div className="prose dark:prose-invert max-w-none prose-sm">
             <ReactMarkdown
@@ -52,18 +52,18 @@ export default function Message({ message, isDark = false }: MessageProps) {
                   const codeId = `${message.id}-${match?.[1] || 'code'}`;
 
                   return !inline && match ? (
-                    <div className="relative group">
-                      <div className="flex items-center justify-between bg-gray-800 dark:bg-gray-900 px-4 py-2 rounded-t-md">
-                        <span className="text-xs text-gray-300">
+                    <div className="relative group/code my-4 rounded-lg overflow-hidden shadow-md">
+                      <div className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black px-4 py-2">
+                        <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">
                           {match[1]}
                         </span>
                         <button
                           onClick={() => copyToClipboard(codeString, codeId)}
-                          className="text-gray-300 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-all hover:scale-110"
                           title="Copy code"
                         >
                           {copiedCode === codeId ? (
-                            <HiClipboardCheck className="w-4 h-4" />
+                            <HiClipboardCheck className="w-4 h-4 text-green-400" />
                           ) : (
                             <HiClipboard className="w-4 h-4" />
                           )}
@@ -73,7 +73,7 @@ export default function Message({ message, isDark = false }: MessageProps) {
                         style={isDark ? oneDark : oneLight}
                         language={match[1]}
                         PreTag="div"
-                        className="!mt-0 !rounded-t-none"
+                        className="!mt-0 !rounded-t-none !text-sm"
                         {...props}
                       >
                         {codeString}
@@ -81,7 +81,7 @@ export default function Message({ message, isDark = false }: MessageProps) {
                     </div>
                   ) : (
                     <code
-                      className="bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded text-sm"
+                      className="bg-blue-100 dark:bg-gray-600 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded font-mono text-sm"
                       {...props}
                     >
                       {children}
