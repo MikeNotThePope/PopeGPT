@@ -4,6 +4,7 @@ import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import { Button, Textarea, Spinner } from 'flowbite-react';
 import { HiPaperAirplane, HiPaperClip, HiX } from 'react-icons/hi';
 import { FileAttachment } from '@/lib/types';
+import { MAX_FILE_SIZE, MAX_ATTACHMENTS, ALLOWED_FILE_TYPES, MAX_MESSAGE_LENGTH } from '@/lib/constants';
 
 interface MessageInputProps {
   onSend: (message: string, attachments?: FileAttachment[]) => void;
@@ -13,6 +14,7 @@ interface MessageInputProps {
 export default function MessageInput({ onSend, disabled = false }: MessageInputProps) {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,10 +29,40 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
     const files = e.target.files;
     if (!files) return;
 
+    // Clear previous errors
+    setError(null);
+
+    // Check if adding these files would exceed max attachments
+    if (attachments.length + files.length > MAX_ATTACHMENTS) {
+      setError(`Maximum ${MAX_ATTACHMENTS} files allowed`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     const newAttachments: FileAttachment[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`File "${file.name}" exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit`);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
+      // Validate file type
+      if (!ALLOWED_FILE_TYPES.includes(file.type) && file.type !== '') {
+        setError(`File type "${file.type}" not allowed`);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
 
       // Convert file to base64 data URL
       const reader = new FileReader();
@@ -61,10 +93,17 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
   };
 
   const handleSend = () => {
+    // Validate message length
+    if (input.length > MAX_MESSAGE_LENGTH) {
+      setError(`Message exceeds ${MAX_MESSAGE_LENGTH} character limit`);
+      return;
+    }
+
     if ((input.trim() || attachments.length > 0) && !disabled) {
       onSend(input, attachments.length > 0 ? attachments : undefined);
       setInput('');
       setAttachments([]);
+      setError(null);
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -98,6 +137,13 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
   return (
     <div className="border-t-4 border-black dark:border-white bg-cyan-300 dark:bg-purple-600 px-4 py-4">
       <div className="max-w-4xl mx-auto">
+        {/* Error message */}
+        {error && (
+          <div className="mb-3 bg-red-500 text-white border-4 border-black dark:border-white px-4 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            <p className="font-bold">{error}</p>
+          </div>
+        )}
+
         {/* File attachments preview */}
         {attachments.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
@@ -154,15 +200,15 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
               type="file"
               multiple
               onChange={handleFileSelect}
-              disabled={disabled}
+              disabled={disabled || attachments.length >= MAX_ATTACHMENTS}
               className="hidden"
-              accept="*/*"
+              accept={ALLOWED_FILE_TYPES.join(',')}
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={disabled}
+              disabled={disabled || attachments.length >= MAX_ATTACHMENTS}
               className="h-11 w-11 bg-yellow-400 dark:bg-pink-500 text-black dark:text-white border-4 border-black dark:border-white font-black uppercase flex items-center transition-all justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:hover:translate-x-0 disabled:hover:translate-y-0"
-              title="Attach files"
+              title={attachments.length >= MAX_ATTACHMENTS ? `Maximum ${MAX_ATTACHMENTS} files` : 'Attach files'}
             >
               <HiPaperClip className="h-5 w-5" />
             </button>

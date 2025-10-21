@@ -1,6 +1,43 @@
 import { NextRequest } from 'next/server';
+import { MAX_REQUEST_BODY_SIZE, MAX_ATTACHMENTS, MAX_MESSAGE_LENGTH, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS } from '@/lib/constants';
 
 export const runtime = 'edge';
+
+// Simple in-memory rate limiter (NOTE: resets on deployment, use Redis/KV for production)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+
+  if (!record || now > record.resetTime) {
+    // Create new window
+    rateLimitMap.set(identifier, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW_MS,
+    });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - record.count };
+}
+
+// Clean up old entries periodically
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }, 60000); // Clean up every minute
+}
 
 interface FileAttachment {
   id: string;
@@ -26,10 +63,44 @@ interface ContentBlock {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting based on IP address
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const { allowed, remaining } = checkRateLimit(ip);
+
+    if (!allowed) {
+      return new Response('Rate limit exceeded. Please try again later.', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+          'X-RateLimit-Remaining': '0',
+          'Retry-After': Math.ceil(RATE_LIMIT_WINDOW_MS / 1000).toString(),
+        }
+      });
+    }
+
+    // Check Content-Length header to prevent oversized requests
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > MAX_REQUEST_BODY_SIZE) {
+      return new Response('Request body too large', { status: 413 });
+    }
+
     const { messages } = await req.json() as { messages: Message[] };
 
     if (!messages || !Array.isArray(messages)) {
       return new Response('Invalid request body', { status: 400 });
+    }
+
+    // Validate messages
+    for (const message of messages) {
+      // Check message length
+      if (message.content && message.content.length > MAX_MESSAGE_LENGTH) {
+        return new Response('Message content too long', { status: 400 });
+      }
+
+      // Check attachment count
+      if (message.attachments && message.attachments.length > MAX_ATTACHMENTS) {
+        return new Response('Too many attachments', { status: 400 });
+      }
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -102,12 +173,13 @@ You have access to various tools and capabilities to help users with their tasks
     const messagesWithSystem = [systemPrompt, ...formattedMessages];
 
     // Call OpenRouter API with streaming
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://popegpt-rust.vercel.app',
+        'HTTP-Referer': appUrl,
         'X-Title': 'PopeGPT',
       },
       body: JSON.stringify({
@@ -195,6 +267,8 @@ You have access to various tools and capabilities to help users with their tasks
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+        'X-RateLimit-Remaining': remaining.toString(),
       },
     });
   } catch (error) {
