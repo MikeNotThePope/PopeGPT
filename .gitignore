@@ -1,0 +1,12 @@
+.env
+.env.local
+.env.*.local
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+
+# Flowbite template files
+flowbite-admin-dashboard-v2.2.0.zip
+flowbite-pro-landing-pages-v1.2.0.zip
