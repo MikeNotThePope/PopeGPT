@@ -35,11 +35,11 @@ export default function ThemeToggle() {
         if (newIsDark) {
           document.documentElement.classList.add('dark');
           const favicon = document.getElementById('favicon') as HTMLLinkElement;
-          if (favicon) favicon.href = '/favicon-dark.svg';
+          if (favicon) favicon.href = '/api/favicon-dark';
         } else {
           document.documentElement.classList.remove('dark');
           const favicon = document.getElementById('favicon') as HTMLLinkElement;
-          if (favicon) favicon.href = '/favicon.svg';
+          if (favicon) favicon.href = '/api/favicon';
         }
       }
     };
@@ -60,13 +60,13 @@ export default function ThemeToggle() {
       localStorage.setItem('theme', 'dark');
       // Update favicon for dark mode
       const favicon = document.getElementById('favicon') as HTMLLinkElement;
-      if (favicon) favicon.href = '/favicon-dark.svg';
+      if (favicon) favicon.href = '/api/favicon-dark';
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
       // Update favicon for light mode
       const favicon = document.getElementById('favicon') as HTMLLinkElement;
-      if (favicon) favicon.href = '/favicon.svg';
+      if (favicon) favicon.href = '/api/favicon';
     }
   };
 

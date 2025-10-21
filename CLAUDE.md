@@ -36,7 +36,9 @@ vercel --prod        # Deploy to production
 - **API Key**: OpenRouter API key stored in `.env` as `OPENROUTER_API_KEY`
 - **App Name**: Customizable username via `NEXT_PUBLIC_USERNAME` (default: "Pope")
   - Used to construct the app name as `{USERNAME}GPT`
-  - Appears in UI header, page title, and AI system prompt
+  - Appears in UI header, page title, AI system prompt, and favicon
+  - Favicon dynamically generated via `/api/favicon` and `/api/favicon-dark` routes
+  - Shows first letter of username (case-sensitive)
 - **Template**: Copy `.env.example` to `.env` and add your configuration
 - The `.env` file is gitignored and should never be committed
 

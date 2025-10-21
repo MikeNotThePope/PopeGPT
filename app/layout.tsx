@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" id="favicon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" id="favicon" href="/api/favicon" type="image/svg+xml" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -39,9 +39,9 @@ export default function RootLayout({
 
                 if (isDark) {
                   document.documentElement.classList.add('dark');
-                  if (favicon) favicon.href = '/favicon-dark.svg';
+                  if (favicon) favicon.href = '/api/favicon-dark';
                 } else {
-                  if (favicon) favicon.href = '/favicon.svg';
+                  if (favicon) favicon.href = '/api/favicon';
                 }
 
                 // Listen for theme changes
@@ -49,7 +49,7 @@ export default function RootLayout({
                   if (e.key === 'theme') {
                     const favicon = document.getElementById('favicon');
                     if (favicon) {
-                      favicon.href = e.newValue === 'dark' ? '/favicon-dark.svg' : '/favicon.svg';
+                      favicon.href = e.newValue === 'dark' ? '/api/favicon-dark' : '/api/favicon';
                     }
                   }
                 });

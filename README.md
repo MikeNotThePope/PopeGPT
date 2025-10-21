@@ -6,7 +6,8 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
 
 - **Streaming Responses**: Real-time word-by-word AI responses
 - **Beautiful UI**: Modern, responsive interface using Flowbite components
-- **Dark Mode**: Toggle between light and dark themes
+- **Dark Mode**: Toggle between light and dark themes with theme-aware favicons
+- **Customizable Branding**: Set your username to personalize the app name and favicon
 - **Multiple Conversations**: Manage multiple chat threads with persistent titles
 - **Markdown Support**: Full markdown rendering with syntax-highlighted code blocks
 - **Copy Code**: One-click copy functionality for code snippets
@@ -54,9 +55,10 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
    ```
 
    **Customization**: Change `NEXT_PUBLIC_USERNAME` to personalize the app! For example:
-   - `NEXT_PUBLIC_USERNAME=Mike` → "MikeGPT"
-   - `NEXT_PUBLIC_USERNAME=Sarah` → "SarahGPT"
-   - The app name will appear in the UI, page title, and AI system prompt
+   - `NEXT_PUBLIC_USERNAME=Mike` → "MikeGPT" with "M" favicon
+   - `NEXT_PUBLIC_USERNAME=Sarah` → "SarahGPT" with "S" favicon
+   - The app name appears in the UI, page title, AI system prompt, and favicon
+   - Favicon dynamically shows the first letter (case-sensitive)
 
 5. Run the development server:
    ```bash
