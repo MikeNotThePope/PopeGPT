@@ -10,6 +10,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const conversationCounter = React.useRef(0);
+  const initialized = React.useRef(false);
 
   const createNewConversation = useCallback(() => {
     conversationCounter.current += 1;
@@ -89,10 +90,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize with first conversation
   React.useEffect(() => {
-    if (conversations.length === 0) {
+    if (!initialized.current && conversations.length === 0) {
+      initialized.current = true;
       createNewConversation();
     }
-  }, []);
+  }, [conversations.length, createNewConversation]);
 
   const value: ChatContextType = {
     conversations,

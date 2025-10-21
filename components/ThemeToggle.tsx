@@ -21,9 +21,15 @@ export default function ThemeToggle() {
     if (newIsDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+      // Update favicon for dark mode
+      const favicon = document.getElementById('favicon') as HTMLLinkElement;
+      if (favicon) favicon.href = '/favicon-dark.svg';
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
+      // Update favicon for light mode
+      const favicon = document.getElementById('favicon') as HTMLLinkElement;
+      if (favicon) favicon.href = '/favicon.svg';
     }
   };
 

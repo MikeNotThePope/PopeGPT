@@ -127,10 +127,15 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
   const finishStreaming = useCallback(() => {
     isComplete.current = true;
 
-    // If animation is not running, trigger completion immediately
-    if (!isStreamingActive.current) {
+    // If animation is not running but we have remaining text, start it
+    if (!isStreamingActive.current && displayIndex.current < fullTextBuffer.current.length) {
+      isStreamingActive.current = true;
+      lastFrameTime.current = 0;
+      animationFrameId.current = requestAnimationFrame(animate);
+    }
+    // If all text is already displayed and animation is not running, complete immediately
+    else if (!isStreamingActive.current && displayIndex.current >= fullTextBuffer.current.length) {
       displayedText.current = fullTextBuffer.current;
-      displayIndex.current = fullTextBuffer.current.length;
 
       if (onUpdateRef.current) {
         onUpdateRef.current(displayedText.current);
@@ -140,7 +145,8 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
         onCompleteRef.current(displayedText.current);
       }
     }
-  }, []);
+    // Otherwise animation is running and will complete naturally
+  }, [animate]);
 
   // Reset all state
   const reset = useCallback(() => {

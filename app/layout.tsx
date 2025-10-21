@@ -18,14 +18,30 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" id="favicon" href="/favicon.svg" type="image/svg+xml" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
                 const theme = localStorage.getItem('theme');
+                const favicon = document.getElementById('favicon');
+
                 if (theme === 'dark') {
                   document.documentElement.classList.add('dark');
+                  if (favicon) favicon.href = '/favicon-dark.svg';
+                } else {
+                  if (favicon) favicon.href = '/favicon.svg';
                 }
+
+                // Listen for theme changes
+                window.addEventListener('storage', (e) => {
+                  if (e.key === 'theme') {
+                    const favicon = document.getElementById('favicon');
+                    if (favicon) {
+                      favicon.href = e.newValue === 'dark' ? '/favicon-dark.svg' : '/favicon.svg';
+                    }
+                  }
+                });
               } catch (e) {}
             `,
           }}

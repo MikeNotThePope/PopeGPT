@@ -24,6 +24,21 @@ describe('ChatContext', () => {
     expect(result.current.conversations[0].messages).toEqual([]);
   });
 
+  it('should only create one conversation on initialization (no duplicates)', () => {
+    // This test verifies the fix for duplicate conversations
+    // that could occur in React Strict Mode
+    const { result, rerender } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    // Force a re-render to simulate potential double-mounting
+    rerender();
+
+    // Should still only have 1 conversation
+    expect(result.current.conversations).toHaveLength(1);
+    expect(result.current.conversations[0].title).toBe('New Chat');
+  });
+
   it('should add a user message', () => {
     const { result } = renderHook(() => useChatContext(), {
       wrapper: ChatProvider,
