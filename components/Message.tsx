@@ -13,9 +13,10 @@ import { HiClipboard, HiClipboardCheck } from 'react-icons/hi';
 interface MessageProps {
   message: MessageType;
   isDark?: boolean;
+  isStreaming?: boolean;
 }
 
-function MessageComponent({ message, isDark = false }: MessageProps) {
+function MessageComponent({ message, isDark = false, isStreaming = false }: MessageProps) {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -40,6 +41,8 @@ function MessageComponent({ message, isDark = false }: MessageProps) {
         }`}
       >
         {isUser ? (
+          <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
+        ) : isStreaming ? (
           <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
         ) : (
           <div className="prose dark:prose-invert max-w-none prose-sm">
@@ -101,7 +104,8 @@ function MessageComponent({ message, isDark = false }: MessageProps) {
 
 const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
   return prevProps.message.content === nextProps.message.content &&
-         prevProps.isDark === nextProps.isDark;
+         prevProps.isDark === nextProps.isDark &&
+         prevProps.isStreaming === nextProps.isStreaming;
 });
 
 export default Message;

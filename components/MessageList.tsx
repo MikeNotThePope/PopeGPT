@@ -49,9 +49,13 @@ export default function MessageList({ messages, isStreaming, isDark = false }: M
         </div>
       ) : (
         <>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id}>
-              <Message message={message} isDark={isDark} />
+              <Message
+                message={message}
+                isDark={isDark}
+                isStreaming={isStreaming && index === messages.length - 1}
+              />
             </div>
           ))}
           {isStreaming && (

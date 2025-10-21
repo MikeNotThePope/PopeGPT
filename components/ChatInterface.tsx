@@ -79,23 +79,21 @@ export default function ChatInterface() {
 
       let assistantMessage = '';
       let hasStartedMessage = false;
-      let rafId: number | null = null;
-      let pendingUpdate = false;
+      let updateTimeout: NodeJS.Timeout | null = null;
 
-      // Batch updates with requestAnimationFrame for smooth rendering
+      // Throttle updates to every 50ms for smooth rendering without overwhelming React
       const scheduleUpdate = () => {
-        if (pendingUpdate) return;
+        if (updateTimeout) return;
 
-        pendingUpdate = true;
-        rafId = requestAnimationFrame(() => {
+        updateTimeout = setTimeout(() => {
           if (!hasStartedMessage) {
             addMessage(assistantMessage, 'assistant');
             hasStartedMessage = true;
           } else {
             updateLastMessage(assistantMessage);
           }
-          pendingUpdate = false;
-        });
+          updateTimeout = null;
+        }, 16); // Update every 16ms (~60fps) for buttery smooth streaming
       };
 
       while (true) {
@@ -124,8 +122,8 @@ export default function ChatInterface() {
       }
 
       // Final update to ensure all content is shown
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
       }
       if (!hasStartedMessage) {
         addMessage(assistantMessage, 'assistant');
