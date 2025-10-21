@@ -1,23 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { Message as MessageType } from '@/lib/types';
-import { Button } from 'flowbite-react';
 import { HiClipboard, HiClipboardCheck } from 'react-icons/hi';
+import SmoothStreamingText, { SmoothStreamingTextRef } from './SmoothStreamingText';
 
 interface MessageProps {
   message: MessageType;
   isDark?: boolean;
   isStreaming?: boolean;
+  onContentChange?: () => void;
 }
 
-function MessageComponent({ message, isDark = false, isStreaming = false }: MessageProps) {
+function MessageComponent({ message, isDark = false, isStreaming = false, onContentChange }: MessageProps) {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
+  const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
+  const previousContentRef = useRef<string>('');
+  const previousStreamingRef = useRef<boolean>(false);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -26,6 +30,45 @@ function MessageComponent({ message, isDark = false, isStreaming = false }: Mess
   };
 
   const isUser = message.role === 'user';
+
+  // Handle streaming state changes and content updates
+  useEffect(() => {
+    if (!isStreaming || isUser || !smoothStreamingRef.current) return;
+
+    const currentContent = message.content;
+    const previousContent = previousContentRef.current;
+
+    // Streaming just started - reset and add all current content
+    // Use previousContent as the guard instead of previousStreamingRef to survive Strict Mode remounts
+    if (!previousStreamingRef.current && isStreaming && previousContent === '') {
+      console.log('[Message] Streaming started, initial content:', currentContent);
+      smoothStreamingRef.current.reset();
+      if (currentContent) {
+        console.log('[Message] Adding initial chunk:', currentContent);
+        smoothStreamingRef.current.addChunk(currentContent);
+      }
+      previousContentRef.current = currentContent;
+      previousStreamingRef.current = true;
+      return;
+    }
+
+    // Calculate the delta (new chunk) for subsequent updates
+    if (currentContent.length > previousContent.length && previousContent !== '') {
+      const chunk = currentContent.slice(previousContent.length);
+      console.log('[Message] Adding delta chunk:', chunk);
+      console.log('[Message] Previous content length:', previousContent.length, 'New content length:', currentContent.length);
+      smoothStreamingRef.current.addChunk(chunk);
+      previousContentRef.current = currentContent;
+    }
+  }, [message.content, isStreaming, isUser]);
+
+  // Handle streaming completion
+  useEffect(() => {
+    if (!isUser && previousStreamingRef.current && !isStreaming && smoothStreamingRef.current) {
+      smoothStreamingRef.current.finishStreaming();
+      previousStreamingRef.current = false;
+    }
+  }, [isStreaming, isUser]);
 
   return (
     <div
@@ -43,11 +86,16 @@ function MessageComponent({ message, isDark = false, isStreaming = false }: Mess
         {isUser ? (
           <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
         ) : isStreaming ? (
-          <div className="prose dark:prose-invert max-w-none prose-sm">
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          </div>
+          <SmoothStreamingText
+            ref={smoothStreamingRef}
+            messageId={message.id}
+            finalMessageContent={message.content}
+            isDark={isDark}
+            onContentChange={onContentChange}
+            charsPerSecond={80}
+          />
         ) : (
-          <div className="prose dark:prose-invert max-w-none prose-sm">
+          <div className="prose dark:prose-invert max-w-none prose-sm leading-relaxed font-bold">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -105,6 +153,12 @@ function MessageComponent({ message, isDark = false, isStreaming = false }: Mess
 }
 
 const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
+  // During streaming, always re-render to process new chunks
+  if (nextProps.isStreaming) {
+    return false;
+  }
+
+  // Otherwise, use normal comparison
   return prevProps.message.content === nextProps.message.content &&
          prevProps.isDark === nextProps.isDark &&
          prevProps.isStreaming === nextProps.isStreaming;

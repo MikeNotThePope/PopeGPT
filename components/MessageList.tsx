@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from 'react';
 import Message from './Message';
 import { Message as MessageType } from '@/lib/types';
-import { Spinner } from 'flowbite-react';
 
 interface MessageListProps {
   messages: MessageType[];
@@ -13,17 +12,28 @@ interface MessageListProps {
 
 export default function MessageList({ messages, isStreaming, isDark = false }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Smooth scroll during streaming (no behavior: smooth for better performance)
+  const scrollToBottomImmediate = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isStreaming]);
+  }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-black dark:scrollbar-thumb-white scrollbar-track-transparent">
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-black dark:scrollbar-thumb-white scrollbar-track-transparent"
+    >
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center">
           <div className="mb-8 p-6 bg-yellow-300 dark:bg-cyan-400 border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
@@ -55,16 +65,10 @@ export default function MessageList({ messages, isStreaming, isDark = false }: M
                 message={message}
                 isDark={isDark}
                 isStreaming={isStreaming && index === messages.length - 1}
+                onContentChange={scrollToBottomImmediate}
               />
             </div>
           ))}
-          {isStreaming && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-white dark:bg-black border-4 border-black dark:border-white px-6 py-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-                <Spinner size="sm" />
-              </div>
-            </div>
-          )}
           <div ref={messagesEndRef} />
         </>
       )}

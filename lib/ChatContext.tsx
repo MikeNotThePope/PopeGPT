@@ -9,10 +9,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const conversationCounter = React.useRef(0);
 
   const createNewConversation = useCallback(() => {
+    conversationCounter.current += 1;
     const newConversation: Conversation = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${conversationCounter.current}`,
       title: 'New Chat',
       messages: [],
       createdAt: Date.now(),
