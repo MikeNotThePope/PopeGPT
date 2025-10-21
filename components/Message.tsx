@@ -43,7 +43,9 @@ function MessageComponent({ message, isDark = false, isStreaming = false }: Mess
         {isUser ? (
           <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
         ) : isStreaming ? (
-          <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
+          <div className="prose dark:prose-invert max-w-none prose-sm">
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          </div>
         ) : (
           <div className="prose dark:prose-invert max-w-none prose-sm">
             <ReactMarkdown
