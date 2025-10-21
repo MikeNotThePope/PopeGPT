@@ -7,6 +7,12 @@ build/
 *.log
 .DS_Store
 
+# Next.js
+.next/
+out/
+next-env.d.ts
+
 # Flowbite template files
 flowbite-admin-dashboard-v2.2.0.zip
 flowbite-pro-landing-pages-v1.2.0.zip
+.vercel
