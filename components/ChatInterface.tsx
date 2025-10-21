@@ -79,6 +79,24 @@ export default function ChatInterface() {
 
       let assistantMessage = '';
       let hasStartedMessage = false;
+      let rafId: number | null = null;
+      let pendingUpdate = false;
+
+      // Batch updates with requestAnimationFrame for smooth rendering
+      const scheduleUpdate = () => {
+        if (pendingUpdate) return;
+
+        pendingUpdate = true;
+        rafId = requestAnimationFrame(() => {
+          if (!hasStartedMessage) {
+            addMessage(assistantMessage, 'assistant');
+            hasStartedMessage = true;
+          } else {
+            updateLastMessage(assistantMessage);
+          }
+          pendingUpdate = false;
+        });
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -96,20 +114,23 @@ export default function ChatInterface() {
               const parsed = JSON.parse(data);
               if (parsed.content) {
                 assistantMessage += parsed.content;
-
-                // Add initial message or update existing one
-                if (!hasStartedMessage) {
-                  addMessage(assistantMessage, 'assistant');
-                  hasStartedMessage = true;
-                } else {
-                  updateLastMessage(assistantMessage);
-                }
+                scheduleUpdate();
               }
             } catch (e) {
               // Skip invalid JSON
             }
           }
         }
+      }
+
+      // Final update to ensure all content is shown
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      if (!hasStartedMessage) {
+        addMessage(assistantMessage, 'assistant');
+      } else {
+        updateLastMessage(assistantMessage);
       }
     } catch (error) {
       console.error('Error sending message:', error);

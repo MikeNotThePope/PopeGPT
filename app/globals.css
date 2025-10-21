@@ -105,3 +105,23 @@ input, textarea {
 .dark *:focus-visible {
   outline: 4px solid #fff !important;
 }
+
+/* Performance optimizations for smooth streaming */
+.prose {
+  will-change: contents;
+  contain: layout style;
+}
+
+/* Smooth text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Optimize message rendering */
+.message-content {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

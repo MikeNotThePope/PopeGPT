@@ -15,7 +15,7 @@ interface MessageProps {
   isDark?: boolean;
 }
 
-export default function Message({ message, isDark = false }: MessageProps) {
+function MessageComponent({ message, isDark = false }: MessageProps) {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -30,7 +30,7 @@ export default function Message({ message, isDark = false }: MessageProps) {
     <div
       className={`flex w-full ${
         isUser ? 'justify-end' : 'justify-start'
-      } mb-5`}
+      } mb-5 message-content`}
     >
       <div
         className={`max-w-[80%] border-4 px-5 py-4 transition-all ${
@@ -98,3 +98,10 @@ export default function Message({ message, isDark = false }: MessageProps) {
     </div>
   );
 }
+
+const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
+  return prevProps.message.content === nextProps.message.content &&
+         prevProps.isDark === nextProps.isDark;
+});
+
+export default Message;
