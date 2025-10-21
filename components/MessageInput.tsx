@@ -68,7 +68,7 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
           <button
             onClick={handleSend}
             disabled={disabled || !input.trim()}
-            className="h-11 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium flex items-center gap-2 transition-colors min-w-[120px] justify-center"
+            className="h-11 w-32 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium flex items-center gap-2 transition-colors justify-center"
           >
           {disabled ? (
             <>

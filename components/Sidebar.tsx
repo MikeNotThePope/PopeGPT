@@ -53,10 +53,13 @@ export default function Sidebar({
                 <HiX className="w-6 h-6" />
               </button>
             </div>
-            <Button onClick={onNewChat} color="blue" className="w-full">
-              <HiPlus className="mr-2 h-5 w-5" />
+            <button
+              onClick={onNewChat}
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+            >
+              <HiPlus className="h-5 w-5" />
               New Chat
-            </Button>
+            </button>
           </div>
 
           {/* Conversation list */}
