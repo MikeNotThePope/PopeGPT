@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
           return;
         }
 
+        let buffer = '';
+
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -67,11 +69,18 @@ export async function POST(req: NextRequest) {
               break;
             }
 
-            // Decode the chunk
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+            // Decode and add to buffer
+            buffer += decoder.decode(value, { stream: true });
+
+            // Process complete lines
+            const lines = buffer.split('\n');
+
+            // Keep the last incomplete line in the buffer
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
+              if (line.trim() === '') continue;
+
               if (line.startsWith('data: ')) {
                 const data = line.slice(6);
 

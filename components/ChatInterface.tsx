@@ -45,16 +45,17 @@ export default function ChatInterface() {
   const handleSendMessage = async (content: string) => {
     if (!currentConversation || isStreaming) return;
 
-    // Add user message
-    addMessage(content, 'user');
     setIsStreaming(true);
 
     try {
-      // Prepare messages for API
+      // Prepare messages for API (before adding to state to avoid race condition)
       const messages = [
         ...currentConversation.messages,
         { role: 'user' as const, content },
       ];
+
+      // Add user message to UI
+      addMessage(content, 'user');
 
       // Call streaming API
       const response = await fetch('/api/chat', {
