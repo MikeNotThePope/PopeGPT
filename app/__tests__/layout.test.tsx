@@ -81,6 +81,45 @@ describe('RootLayout', () => {
     }
   });
 
+  it('should include favicon initialization in script', () => {
+    const { container } = render(
+      <RootLayout>
+        <div>Content</div>
+      </RootLayout>
+    );
+
+    const script = container.querySelector('script');
+    expect(script).toBeInTheDocument();
+
+    if (script) {
+      const scriptContent = script.innerHTML;
+      expect(scriptContent).toContain('favicon');
+      expect(scriptContent).toContain('/api/favicon-dark');
+      expect(scriptContent).toContain('/api/favicon');
+      expect(scriptContent).toContain('createElement');
+      expect(scriptContent).toContain('appendChild');
+    }
+  });
+
+  it('should create favicon link element with correct attributes', () => {
+    const { container } = render(
+      <RootLayout>
+        <div>Content</div>
+      </RootLayout>
+    );
+
+    const script = container.querySelector('script');
+    expect(script).toBeInTheDocument();
+
+    if (script) {
+      const scriptContent = script.innerHTML;
+      // Check that the script sets up favicon with proper attributes
+      expect(scriptContent).toContain('link.id = \'favicon\'');
+      expect(scriptContent).toContain('link.rel = \'icon\'');
+      expect(scriptContent).toContain('link.type = \'image/svg+xml\'');
+    }
+  });
+
   it('should render head element', () => {
     const { container } = render(
       <RootLayout>

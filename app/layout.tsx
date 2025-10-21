@@ -20,13 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" id="favicon" href="/api/favicon" type="image/svg+xml" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
                 const theme = localStorage.getItem('theme');
-                const favicon = document.getElementById('favicon');
                 let isDark = false;
 
                 // Check user preference first, then system preference
@@ -39,20 +37,16 @@ export default function RootLayout({
 
                 if (isDark) {
                   document.documentElement.classList.add('dark');
-                  if (favicon) favicon.href = '/api/favicon-dark';
-                } else {
-                  if (favicon) favicon.href = '/api/favicon';
                 }
 
-                // Listen for theme changes
-                window.addEventListener('storage', (e) => {
-                  if (e.key === 'theme') {
-                    const favicon = document.getElementById('favicon');
-                    if (favicon) {
-                      favicon.href = e.newValue === 'dark' ? '/api/favicon-dark' : '/api/favicon';
-                    }
-                  }
-                });
+                // Set initial favicon
+                const faviconUrl = isDark ? '/api/favicon-dark' : '/api/favicon';
+                const link = document.createElement('link');
+                link.id = 'favicon';
+                link.rel = 'icon';
+                link.type = 'image/svg+xml';
+                link.href = faviconUrl;
+                document.head.appendChild(link);
               } catch (e) {}
             `,
           }}

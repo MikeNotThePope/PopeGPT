@@ -34,12 +34,21 @@ export default function ThemeToggle() {
 
         if (newIsDark) {
           document.documentElement.classList.add('dark');
-          const favicon = document.getElementById('favicon') as HTMLLinkElement;
-          if (favicon) favicon.href = '/api/favicon-dark';
+          updateFaviconDirect('/api/favicon-dark');
         } else {
           document.documentElement.classList.remove('dark');
-          const favicon = document.getElementById('favicon') as HTMLLinkElement;
-          if (favicon) favicon.href = '/api/favicon';
+          updateFaviconDirect('/api/favicon');
+        }
+
+        function updateFaviconDirect(url: string) {
+          const oldFavicon = document.getElementById('favicon');
+          if (oldFavicon) oldFavicon.remove();
+          const newFavicon = document.createElement('link');
+          newFavicon.id = 'favicon';
+          newFavicon.rel = 'icon';
+          newFavicon.type = 'image/svg+xml';
+          newFavicon.href = url;
+          document.head.appendChild(newFavicon);
         }
       }
     };
@@ -58,16 +67,28 @@ export default function ThemeToggle() {
     if (newIsDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
-      // Update favicon for dark mode
-      const favicon = document.getElementById('favicon') as HTMLLinkElement;
-      if (favicon) favicon.href = '/api/favicon-dark';
+      updateFavicon('/api/favicon-dark');
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
-      // Update favicon for light mode
-      const favicon = document.getElementById('favicon') as HTMLLinkElement;
-      if (favicon) favicon.href = '/api/favicon';
+      updateFavicon('/api/favicon');
     }
+  };
+
+  const updateFavicon = (url: string) => {
+    // Remove old favicon
+    const oldFavicon = document.getElementById('favicon');
+    if (oldFavicon) {
+      oldFavicon.remove();
+    }
+
+    // Create and add new favicon
+    const newFavicon = document.createElement('link');
+    newFavicon.id = 'favicon';
+    newFavicon.rel = 'icon';
+    newFavicon.type = 'image/svg+xml';
+    newFavicon.href = url;
+    document.head.appendChild(newFavicon);
   };
 
   // Avoid hydration mismatch
