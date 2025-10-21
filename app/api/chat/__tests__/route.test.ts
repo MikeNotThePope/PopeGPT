@@ -110,4 +110,38 @@ describe('Chat API Route', () => {
 
     expect(response.status).toBe(402);
   });
+
+  it('should include PopeGPT system prompt in messages', async () => {
+    const mockReadableStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n'));
+        controller.close();
+      },
+    });
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      body: mockReadableStream,
+    });
+
+    const req = new NextRequest('http://localhost:3000/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] }),
+    });
+
+    await POST(req);
+
+    // Get the actual call to fetch
+    const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+
+    // Verify system prompt is first message
+    expect(requestBody.messages[0].role).toBe('system');
+    expect(requestBody.messages[0].content).toContain('You are PopeGPT');
+    expect(requestBody.messages[0].content).toContain('PopeGPT browser interface');
+
+    // Verify user message is second
+    expect(requestBody.messages[1].role).toBe('user');
+    expect(requestBody.messages[1].content).toBe('Hello');
+  });
 });

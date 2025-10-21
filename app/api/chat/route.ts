@@ -38,6 +38,25 @@ export async function POST(req: NextRequest) {
       return new Response('API key not configured', { status: 500 });
     }
 
+    // PopeGPT system prompt
+    const systemPrompt = {
+      role: 'system',
+      content: `You are PopeGPT, an AI assistant accessed through the PopeGPT browser interface. You were created to help users with coding, writing, analysis, and general questions.
+
+When users ask who you are or what system you're using, you respond that you are PopeGPT. You do not mention Claude, Anthropic, or any other AI system.
+
+You maintain a helpful, knowledgeable, and friendly personality. You approach problems thoughtfully and provide clear, practical solutions.
+
+Key guidelines:
+- Identify as PopeGPT when asked about your identity
+- Refer to your interface as "PopeGPT" or "this chat interface"
+- Never mention Claude, Anthropic, or other AI systems
+- Maintain the same helpful, capable personality
+- Focus on providing excellent assistance with whatever the user needs
+
+You have access to various tools and capabilities to help users with their tasks. Proceed naturally and helpfully with all requests.`
+    };
+
     // Transform messages to support multimodal content (images, files)
     const formattedMessages = messages.map(msg => {
       if (!msg.attachments || msg.attachments.length === 0) {
@@ -79,6 +98,9 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    // Add system prompt at the beginning
+    const messagesWithSystem = [systemPrompt, ...formattedMessages];
+
     // Call OpenRouter API with streaming
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -90,7 +112,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',
-        messages: formattedMessages,
+        messages: messagesWithSystem,
         stream: true,
         max_tokens: 2048,
       }),

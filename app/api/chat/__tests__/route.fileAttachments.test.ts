@@ -35,7 +35,11 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    expect(body.messages[0]).toEqual({
+    // System prompt is first (index 0)
+    expect(body.messages[0].role).toBe('system');
+
+    // User message is second (index 1)
+    expect(body.messages[1]).toEqual({
       role: 'user',
       content: 'Hello',
     });
@@ -80,8 +84,8 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    // Verify message has content array with text and image_url
-    expect(body.messages[0].content).toEqual([
+    // Verify message has content array with text and image_url (user message is at index 1)
+    expect(body.messages[1].content).toEqual([
       {
         type: 'text',
         text: 'What do you see in this image?',
@@ -141,10 +145,11 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    expect(body.messages[0].content).toHaveLength(3); // text + 2 images
-    expect(body.messages[0].content[0].type).toBe('text');
-    expect(body.messages[0].content[1].type).toBe('image_url');
-    expect(body.messages[0].content[2].type).toBe('image_url');
+    // User message is at index 1
+    expect(body.messages[1].content).toHaveLength(3); // text + 2 images
+    expect(body.messages[1].content[0].type).toBe('text');
+    expect(body.messages[1].content[1].type).toBe('image_url');
+    expect(body.messages[1].content[2].type).toBe('image_url');
   });
 
   it('should handle non-image attachments as text descriptions', async () => {
@@ -186,7 +191,8 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    expect(body.messages[0].content).toEqual([
+    // User message is at index 1
+    expect(body.messages[1].content).toEqual([
       {
         type: 'text',
         text: 'Review this document',
@@ -237,8 +243,8 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    // Should only have image, no empty text block
-    expect(body.messages[0].content).toEqual([
+    // Should only have image, no empty text block (user message is at index 1)
+    expect(body.messages[1].content).toEqual([
       {
         type: 'image_url',
         image_url: {
@@ -301,20 +307,21 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    expect(body.messages[0].content).toHaveLength(4); // text + 2 images + 1 pdf description
-    expect(body.messages[0].content[0]).toEqual({
+    // User message is at index 1
+    expect(body.messages[1].content).toHaveLength(4); // text + 2 images + 1 pdf description
+    expect(body.messages[1].content[0]).toEqual({
       type: 'text',
       text: 'Check these files',
     });
-    expect(body.messages[0].content[1]).toEqual({
+    expect(body.messages[1].content[1]).toEqual({
       type: 'image_url',
       image_url: { url: 'data:image/png;base64,imagedata' },
     });
-    expect(body.messages[0].content[2]).toEqual({
+    expect(body.messages[1].content[2]).toEqual({
       type: 'text',
       text: '[Attached file: report.pdf (application/pdf, 5.0 KB)]',
     });
-    expect(body.messages[0].content[3]).toEqual({
+    expect(body.messages[1].content[3]).toEqual({
       type: 'image_url',
       image_url: { url: 'data:image/jpeg;base64,chartdata' },
     });
@@ -361,20 +368,23 @@ describe('Chat API Route - File Attachments', () => {
     const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(fetchCall[1].body);
 
-    // First message (user) - simple string
-    expect(body.messages[0]).toEqual({
+    // System prompt is first (index 0)
+    expect(body.messages[0].role).toBe('system');
+
+    // First user message (index 1) - simple string
+    expect(body.messages[1]).toEqual({
       role: 'user',
       content: 'Hello',
     });
 
-    // Second message (assistant) - simple string
-    expect(body.messages[1]).toEqual({
+    // Assistant message (index 2) - simple string
+    expect(body.messages[2]).toEqual({
       role: 'assistant',
       content: 'Hi there!',
     });
 
-    // Third message (user with attachment) - content array
-    expect(body.messages[2].content).toEqual([
+    // Second user message with attachment (index 3) - content array
+    expect(body.messages[3].content).toEqual([
       { type: 'text', text: 'Look at this' },
       { type: 'image_url', image_url: { url: 'data:image/png;base64,data' } },
     ]);
@@ -429,7 +439,8 @@ describe('Chat API Route - File Attachments', () => {
       const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
       const body = JSON.parse(fetchCall[1].body);
 
-      expect(body.messages[0].content[1]).toEqual({
+      // User message is at index 1
+      expect(body.messages[1].content[1]).toEqual({
         type: 'image_url',
         image_url: { url: `data:${imageType.type};base64,mockdata` },
       });
