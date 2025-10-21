@@ -131,7 +131,7 @@ Perfect for portfolio demos with a $10/month budget, supporting thousands of con
 
 ## License
 
-MIT
+This project is licensed under [CC0 1.0 Universal](LICENSE) - it is dedicated to the public domain. You can copy, modify, distribute and use the work, even for commercial purposes, all without asking permission.
 
 ## Author
 
