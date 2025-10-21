@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useChatContext } from '@/lib/ChatContext';
+import { FileAttachment } from '@/lib/types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -42,7 +43,7 @@ export default function ChatInterface() {
 
   const currentConversation = getCurrentConversation();
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
     if (!currentConversation || isStreaming) return;
 
     setIsStreaming(true);
@@ -51,11 +52,11 @@ export default function ChatInterface() {
       // Prepare messages for API (before adding to state to avoid race condition)
       const messages = [
         ...currentConversation.messages,
-        { role: 'user' as const, content },
+        { role: 'user' as const, content, attachments },
       ];
 
       // Add user message to UI
-      addMessage(content, 'user');
+      addMessage(content, 'user', attachments);
 
       // Call streaming API
       const response = await fetch('/api/chat', {

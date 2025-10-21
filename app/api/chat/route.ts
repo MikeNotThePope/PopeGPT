@@ -2,9 +2,26 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+interface FileAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64 data URL
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  attachments?: FileAttachment[];
+}
+
+interface ContentBlock {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -21,6 +38,47 @@ export async function POST(req: NextRequest) {
       return new Response('API key not configured', { status: 500 });
     }
 
+    // Transform messages to support multimodal content (images, files)
+    const formattedMessages = messages.map(msg => {
+      if (!msg.attachments || msg.attachments.length === 0) {
+        return { role: msg.role, content: msg.content };
+      }
+
+      // Build content array with text and attachments
+      const contentBlocks: ContentBlock[] = [];
+
+      // Add text content if present
+      if (msg.content && msg.content.trim()) {
+        contentBlocks.push({
+          type: 'text',
+          text: msg.content,
+        });
+      }
+
+      // Add image attachments
+      msg.attachments.forEach(attachment => {
+        if (attachment.type.startsWith('image/')) {
+          contentBlocks.push({
+            type: 'image_url',
+            image_url: {
+              url: attachment.data, // base64 data URL
+            },
+          });
+        } else {
+          // For non-image files, include file info in text
+          contentBlocks.push({
+            type: 'text',
+            text: `[Attached file: ${attachment.name} (${attachment.type}, ${(attachment.size / 1024).toFixed(1)} KB)]`,
+          });
+        }
+      });
+
+      return {
+        role: msg.role,
+        content: contentBlocks,
+      };
+    });
+
     // Call OpenRouter API with streaming
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -32,7 +90,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',
-        messages: messages,
+        messages: formattedMessages,
         stream: true,
         max_tokens: 2048,
       }),

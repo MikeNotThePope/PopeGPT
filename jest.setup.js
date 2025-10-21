@@ -194,3 +194,75 @@ global.ReadableStream = class ReadableStream {
     };
   }
 };
+
+// Mock Headers for edge runtime
+global.Headers = class Headers {
+  constructor(init) {
+    this.headers = {};
+    if (init) {
+      Object.entries(init).forEach(([key, value]) => {
+        this.headers[key.toLowerCase()] = value;
+      });
+    }
+  }
+
+  get(name) {
+    return this.headers[name.toLowerCase()] || null;
+  }
+
+  set(name, value) {
+    this.headers[name.toLowerCase()] = value;
+  }
+
+  has(name) {
+    return name.toLowerCase() in this.headers;
+  }
+
+  append(name, value) {
+    this.headers[name.toLowerCase()] = value;
+  }
+};
+
+// Mock Request for edge runtime
+global.Request = class Request {
+  constructor(url, init = {}) {
+    this.url = url;
+    this.method = init.method || 'GET';
+    this.headers = new Headers(init.headers);
+    this._bodyText = init.body;
+  }
+
+  async json() {
+    return JSON.parse(this._bodyText);
+  }
+
+  async text() {
+    return this._bodyText;
+  }
+};
+
+// Mock Response for edge runtime
+global.Response = class Response {
+  constructor(body, init = {}) {
+    this.body = body;
+    this.status = init.status || 200;
+    this.statusText = init.statusText || 'OK';
+    this.headers = new Headers(init.headers);
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+
+  async text() {
+    if (typeof this.body === 'string') {
+      return this.body;
+    }
+    if (this.body instanceof ReadableStream) {
+      return '[Stream]';
+    }
+    return String(this.body);
+  }
+
+  async json() {
+    const text = await this.text();
+    return JSON.parse(text);
+  }
+};

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Message, Conversation, ChatContextType } from './types';
+import { Message, Conversation, ChatContextType, FileAttachment } from './types';
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -27,12 +27,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return conversations.find(c => c.id === currentConversationId) || null;
   }, [conversations, currentConversationId]);
 
-  const addMessage = useCallback((content: string, role: 'user' | 'assistant') => {
+  const addMessage = useCallback((content: string, role: 'user' | 'assistant', attachments?: FileAttachment[]) => {
     const message: Message = {
       id: Date.now().toString() + Math.random(),
       role,
       content,
       timestamp: Date.now(),
+      attachments,
     };
 
     setConversations(prev => {

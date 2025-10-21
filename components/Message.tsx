@@ -7,7 +7,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { Message as MessageType } from '@/lib/types';
-import { HiClipboard, HiClipboardCheck } from 'react-icons/hi';
+import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload } from 'react-icons/hi';
 import SmoothStreamingText, { SmoothStreamingTextRef } from './SmoothStreamingText';
 
 interface MessageProps {
@@ -27,6 +27,12 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
     navigator.clipboard.writeText(text);
     setCopiedCode(id);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const isUser = message.role === 'user';
@@ -79,6 +85,44 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
             : 'bg-white dark:bg-gray-900 text-black dark:text-white border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]'
         }`}
       >
+        {/* Display file attachments */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {message.attachments.map(attachment => {
+              if (attachment.type.startsWith('image/')) {
+                return (
+                  <div key={attachment.id} className="border-2 border-black dark:border-white overflow-hidden">
+                    <img
+                      src={attachment.data}
+                      alt={attachment.name}
+                      className="max-w-full h-auto"
+                    />
+                    <div className="bg-yellow-300 dark:bg-cyan-400 border-t-2 border-black dark:border-white px-2 py-1">
+                      <span className="text-xs font-bold text-black">{attachment.name}</span>
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <a
+                    key={attachment.id}
+                    href={attachment.data}
+                    download={attachment.name}
+                    className="flex items-center gap-2 bg-yellow-300 dark:bg-cyan-400 border-2 border-black dark:border-white px-3 py-2 hover:bg-yellow-400 dark:hover:bg-cyan-500 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+                  >
+                    <HiDocumentText className="h-5 w-5 text-black" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-black truncate">{attachment.name}</div>
+                      <div className="text-xs text-gray-700">{formatFileSize(attachment.size)}</div>
+                    </div>
+                    <HiDownload className="h-4 w-4 text-black" />
+                  </a>
+                );
+              }
+            })}
+          </div>
+        )}
+
         {isUser ? (
           <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
         ) : isStreaming ? (

@@ -36,7 +36,7 @@ describe('MessageInput', () => {
     await user.type(textarea, 'Test message');
     await user.click(sendButton);
 
-    expect(mockOnSend).toHaveBeenCalledWith('Test message');
+    expect(mockOnSend).toHaveBeenCalledWith('Test message', undefined);
   });
 
   it('should clear input after sending', async () => {
@@ -60,7 +60,7 @@ describe('MessageInput', () => {
 
     await user.type(textarea, 'Test message{Enter}');
 
-    expect(mockOnSend).toHaveBeenCalledWith('Test message');
+    expect(mockOnSend).toHaveBeenCalledWith('Test message', undefined);
   });
 
   it('should not send when Shift+Enter is pressed', async () => {
@@ -98,7 +98,7 @@ describe('MessageInput', () => {
     render(<MessageInput onSend={mockOnSend} disabled={true} />);
 
     const textarea = screen.getByPlaceholderText(/type your message/i);
-    const sendButton = screen.getByRole('button');
+    const sendButton = screen.getByRole('button', { name: /send/i });
 
     expect(textarea).toBeDisabled();
     expect(sendButton).toBeDisabled();
