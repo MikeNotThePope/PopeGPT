@@ -23,6 +23,8 @@ export default function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
+  const appName = `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`;
+
   return (
     <>
       {/* Mobile overlay */}
@@ -44,7 +46,7 @@ export default function Sidebar({
           <div className="p-4 border-b-4 border-black dark:border-white">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
-                PopeGPT
+                {appName}
               </h1>
               <button
                 onClick={onClose}

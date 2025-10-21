@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PopeGPT is a production-ready ChatGPT/Claude-style chat interface built with Next.js 14, React, TypeScript, Flowbite components, and Tailwind CSS. It uses Claude 3 Haiku via the OpenRouter API for cost-effective AI responses with streaming support.
 
+**Note**: The app name is customizable via the `NEXT_PUBLIC_USERNAME` environment variable. By default it's "PopeGPT", but users can personalize it (e.g., "MikeGPT", "SarahGPT", etc.).
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router
@@ -32,7 +34,10 @@ vercel --prod        # Deploy to production
 ## Environment Configuration
 
 - **API Key**: OpenRouter API key stored in `.env` as `OPENROUTER_API_KEY`
-- **Template**: Copy `.env.example` to `.env` and add your API key
+- **App Name**: Customizable username via `NEXT_PUBLIC_USERNAME` (default: "Pope")
+  - Used to construct the app name as `{USERNAME}GPT`
+  - Appears in UI header, page title, and AI system prompt
+- **Template**: Copy `.env.example` to `.env` and add your configuration
 - The `.env` file is gitignored and should never be committed
 
 ## Architecture

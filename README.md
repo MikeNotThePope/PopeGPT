@@ -50,7 +50,13 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
 4. Add your OpenRouter API key to `.env`:
    ```
    OPENROUTER_API_KEY=your_actual_api_key_here
+   NEXT_PUBLIC_USERNAME=Pope
    ```
+
+   **Customization**: Change `NEXT_PUBLIC_USERNAME` to personalize the app! For example:
+   - `NEXT_PUBLIC_USERNAME=Mike` → "MikeGPT"
+   - `NEXT_PUBLIC_USERNAME=Sarah` → "SarahGPT"
+   - The app name will appear in the UI, page title, and AI system prompt
 
 5. Run the development server:
    ```bash
@@ -67,9 +73,9 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
 2. Visit [vercel.com](https://vercel.com)
 3. Click "New Project"
 4. Import your repository
-5. Add environment variable:
-   - Name: `OPENROUTER_API_KEY`
-   - Value: Your OpenRouter API key
+5. Add environment variables:
+   - `OPENROUTER_API_KEY`: Your OpenRouter API key
+   - `NEXT_PUBLIC_USERNAME`: Your custom username (default: "Pope")
 6. Click "Deploy"
 
 ### Option 2: Deploy via Vercel CLI
@@ -89,12 +95,14 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
    vercel
    ```
 
-4. Add environment variable:
+4. Add environment variables:
    ```bash
    vercel env add OPENROUTER_API_KEY
+   vercel env add NEXT_PUBLIC_USERNAME
    ```
+   Enter your values when prompted.
 
-5. Redeploy to apply environment variable:
+5. Redeploy to apply environment variables:
    ```bash
    vercel --prod
    ```

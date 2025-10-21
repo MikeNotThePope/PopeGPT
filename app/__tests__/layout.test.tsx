@@ -112,8 +112,9 @@ describe('RootLayout', () => {
 });
 
 describe('Layout Metadata', () => {
-  it('should have correct title', () => {
-    expect(metadata.title).toBe('PopeGPT - AI Chat Interface');
+  it('should have correct title format', () => {
+    const username = process.env.NEXT_PUBLIC_USERNAME || 'Pope';
+    expect(metadata.title).toBe(`${username}GPT - AI Chat Interface`);
   });
 
   it('should have correct description', () => {

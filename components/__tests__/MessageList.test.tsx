@@ -3,6 +3,16 @@ import MessageList from '../MessageList';
 import { Message as MessageType } from '@/lib/types';
 
 describe('MessageList', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, NEXT_PUBLIC_USERNAME: 'Pope' };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   const messages: MessageType[] = [
     {
       id: '1',

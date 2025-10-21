@@ -5,9 +5,17 @@ import { NextRequest } from 'next/server';
 global.fetch = jest.fn();
 
 describe('Chat API Route', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env = { ...originalEnv };
     process.env.OPENROUTER_API_KEY = 'test-api-key';
+    process.env.NEXT_PUBLIC_USERNAME = 'Pope';
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   it('should return 400 for invalid request body', async () => {

@@ -5,8 +5,10 @@ import { ChatProvider } from "@/lib/ChatContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
+const appName = `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`;
+
 export const metadata: Metadata = {
-  title: "PopeGPT - AI Chat Interface",
+  title: `${appName} - AI Chat Interface`,
   description: "A beautiful AI chat interface powered by Claude 3 Haiku",
 };
 

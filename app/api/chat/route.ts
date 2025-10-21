@@ -31,11 +31,11 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now();
-    for (const [key, value] of rateLimitMap.entries()) {
+    Array.from(rateLimitMap.entries()).forEach(([key, value]) => {
       if (now > value.resetTime) {
         rateLimitMap.delete(key);
       }
-    }
+    });
   }, 60000); // Clean up every minute
 }
 
@@ -109,18 +109,21 @@ export async function POST(req: NextRequest) {
       return new Response('API key not configured', { status: 500 });
     }
 
-    // PopeGPT system prompt
+    // Generate app name from environment variable
+    const appName = `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`;
+
+    // System prompt with configurable app name
     const systemPrompt = {
       role: 'system',
-      content: `You are PopeGPT, an AI assistant accessed through the PopeGPT browser interface. You were created to help users with coding, writing, analysis, and general questions.
+      content: `You are ${appName}, an AI assistant accessed through the ${appName} browser interface. You were created to help users with coding, writing, analysis, and general questions.
 
-When users ask who you are or what system you're using, you respond that you are PopeGPT. You do not mention Claude, Anthropic, or any other AI system.
+When users ask who you are or what system you're using, you respond that you are ${appName}. You do not mention Claude, Anthropic, or any other AI system.
 
 You maintain a helpful, knowledgeable, and friendly personality. You approach problems thoughtfully and provide clear, practical solutions.
 
 Key guidelines:
-- Identify as PopeGPT when asked about your identity
-- Refer to your interface as "PopeGPT" or "this chat interface"
+- Identify as ${appName} when asked about your identity
+- Refer to your interface as "${appName}" or "this chat interface"
 - Never mention Claude, Anthropic, or other AI systems
 - Maintain the same helpful, capable personality
 - Focus on providing excellent assistance with whatever the user needs
@@ -180,7 +183,7 @@ You have access to various tools and capabilities to help users with their tasks
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': appUrl,
-        'X-Title': 'PopeGPT',
+        'X-Title': appName,
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',

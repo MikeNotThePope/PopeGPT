@@ -3,6 +3,17 @@ import Sidebar from '../Sidebar';
 import { Conversation } from '@/lib/types';
 
 describe('Sidebar', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv, NEXT_PUBLIC_USERNAME: 'Pope' };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   const mockConversations: Conversation[] = [
     {
       id: '1',
@@ -26,10 +37,6 @@ describe('Sidebar', () => {
     isOpen: true,
     onClose: jest.fn(),
   };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   it('should render sidebar with conversations', () => {
     render(<Sidebar {...mockProps} />);

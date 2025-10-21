@@ -7,9 +7,16 @@ import { ChatProvider } from '@/lib/ChatContext';
 global.fetch = jest.fn();
 
 describe('ChatInterface', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
     jest.clearAllMocks();
     (global.fetch as jest.Mock).mockClear();
+    process.env = { ...originalEnv, NEXT_PUBLIC_USERNAME: 'Pope' };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   const renderChatInterface = () => {
