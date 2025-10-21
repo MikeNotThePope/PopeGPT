@@ -41,10 +41,8 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
     // Streaming just started - reset and add all current content
     // Use previousContent as the guard instead of previousStreamingRef to survive Strict Mode remounts
     if (!previousStreamingRef.current && isStreaming && previousContent === '') {
-      console.log('[Message] Streaming started, initial content:', currentContent);
       smoothStreamingRef.current.reset();
       if (currentContent) {
-        console.log('[Message] Adding initial chunk:', currentContent);
         smoothStreamingRef.current.addChunk(currentContent);
       }
       previousContentRef.current = currentContent;
@@ -55,8 +53,6 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
     // Calculate the delta (new chunk) for subsequent updates
     if (currentContent.length > previousContent.length && previousContent !== '') {
       const chunk = currentContent.slice(previousContent.length);
-      console.log('[Message] Adding delta chunk:', chunk);
-      console.log('[Message] Previous content length:', previousContent.length, 'New content length:', currentContent.length);
       smoothStreamingRef.current.addChunk(chunk);
       previousContentRef.current = currentContent;
     }

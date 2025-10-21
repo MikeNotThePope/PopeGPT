@@ -53,43 +53,32 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
 
   // Cleanup function
   const cleanup = useCallback(() => {
-    console.log('[cleanup] Called! Cancelling frame ID:', animationFrameId.current);
     if (animationFrameId.current !== null) {
       cancelAnimationFrame(animationFrameId.current);
       animationFrameId.current = null;
-      console.log('[cleanup] Frame cancelled, ID now null');
     }
     // Reset streaming state so animation can restart after cleanup
     isStreamingActive.current = false;
-    console.log('[cleanup] isStreamingActive set to false');
   }, []);
 
   // Animation loop - renders text smoothly character by character
   const animate = useCallback((currentTime: number) => {
-    console.log('[animate] Frame at', currentTime, 'isStreamingActive:', isStreamingActive.current);
-
     if (!isStreamingActive.current) {
-      console.log('[animate] Not active, exiting');
       return;
     }
 
     // Initialize on first frame
     if (lastFrameTime.current === 0) {
-      console.log('[animate] First frame, initializing lastFrameTime');
       lastFrameTime.current = currentTime;
     }
 
     const deltaTime = currentTime - lastFrameTime.current;
     lastFrameTime.current = currentTime;
 
-    console.log('[animate] deltaTime:', deltaTime, 'charsPerSecond:', charsPerSecond);
-
     // Calculate how many characters to add this frame
     // Using deltaTime to account for variable frame rates
     // Cap at 5 chars per frame to prevent jumps
     const charsToAdd = Math.max(1, Math.min(5, Math.floor((deltaTime / 1000) * charsPerSecond)));
-
-    console.log('[animate] Will add', charsToAdd, 'chars. displayIndex:', displayIndex.current, 'bufferLength:', fullTextBuffer.current.length);
 
     // Update display if we have more text to show
     if (displayIndex.current < fullTextBuffer.current.length) {
@@ -101,21 +90,15 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
       displayIndex.current = newIndex;
       displayedText.current = fullTextBuffer.current.slice(0, newIndex);
 
-      console.log('[animate] Updated display to:', displayedText.current.slice(0, 50) + '...');
-
       // Trigger update callback for DOM manipulation
       if (onUpdateRef.current) {
-        console.log('[animate] Calling onUpdate callback');
         onUpdateRef.current(displayedText.current);
-      } else {
-        console.log('[animate] WARNING: onUpdate callback is null!');
       }
 
       // Continue animation
       animationFrameId.current = requestAnimationFrame(animate);
     } else if (isComplete.current) {
       // Streaming is complete and we've displayed all text
-      console.log('[animate] Complete! Cleaning up');
       cleanup();
       isStreamingActive.current = false;
 
@@ -124,34 +107,19 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
       }
     } else {
       // Waiting for more chunks - keep animating
-      console.log('[animate] Waiting for more chunks, continuing animation');
       animationFrameId.current = requestAnimationFrame(animate);
     }
   }, [charsPerSecond, cleanup]);
 
   // Add incoming chunk to buffer
   const addChunk = useCallback((chunk: string) => {
-    console.log('[useSmoothStreaming] addChunk called with:', chunk);
-    console.log('[useSmoothStreaming] Buffer before:', fullTextBuffer.current);
     fullTextBuffer.current += chunk;
-    console.log('[useSmoothStreaming] Buffer after:', fullTextBuffer.current);
 
     // Start or restart animation if not running (handles Strict Mode remounts)
     if (!isStreamingActive.current || animationFrameId.current === null) {
-      console.log('[useSmoothStreaming] Starting/restarting animation');
-      console.log('[useSmoothStreaming] animate function type:', typeof animate);
-      console.log('[useSmoothStreaming] animate function:', animate);
       isStreamingActive.current = true;
       lastFrameTime.current = 0;
-      const frameId = requestAnimationFrame(animate);
-      console.log('[useSmoothStreaming] requestAnimationFrame returned ID:', frameId);
-      animationFrameId.current = frameId;
-
-      // Diagnostic: Check if animate gets called within 100ms
-      setTimeout(() => {
-        console.log('[useSmoothStreaming] DIAGNOSTIC: 100ms passed, isStreamingActive:', isStreamingActive.current);
-        console.log('[useSmoothStreaming] DIAGNOSTIC: animationFrameId:', animationFrameId.current);
-      }, 100);
+      animationFrameId.current = requestAnimationFrame(animate);
     }
   }, [animate]);
 
@@ -176,7 +144,6 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
 
   // Reset all state
   const reset = useCallback(() => {
-    console.log('[useSmoothStreaming] RESET called, clearing buffer:', fullTextBuffer.current);
     cleanup();
     fullTextBuffer.current = '';
     displayedText.current = '';
@@ -184,7 +151,6 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
     isStreamingActive.current = false;
     isComplete.current = false;
     lastFrameTime.current = 0;
-    console.log('[useSmoothStreaming] RESET complete');
   }, [cleanup]);
 
   // Skip animation and show all text immediately
@@ -205,9 +171,7 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
 
   // Cleanup on unmount
   useEffect(() => {
-    console.log('[useEffect] Smooth streaming hook mounted/updated');
     return () => {
-      console.log('[useEffect cleanup] Component unmounting or cleanup dependency changed');
       cleanup();
     };
   }, [cleanup]);
