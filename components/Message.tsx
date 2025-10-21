@@ -95,7 +95,7 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
             charsPerSecond={80}
           />
         ) : (
-          <div className="prose dark:prose-invert max-w-none prose-sm leading-relaxed font-bold">
+          <div className="prose dark:prose-invert max-w-none prose-p:font-bold prose-li:font-bold prose-headings:font-black leading-relaxed font-bold text-black dark:text-white">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
