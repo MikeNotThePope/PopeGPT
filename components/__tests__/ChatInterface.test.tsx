@@ -30,7 +30,7 @@ describe('ChatInterface', () => {
   it('should show empty state initially', () => {
     renderChatInterface();
 
-    expect(screen.getByText(/welcome! start a conversation/i)).toBeInTheDocument();
+    expect(screen.getByText(/start chatting now!/i)).toBeInTheDocument();
   });
 
   it('should display user message after sending', async () => {

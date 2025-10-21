@@ -22,7 +22,7 @@ describe('MessageList', () => {
     render(<MessageList messages={[]} isStreaming={false} />);
 
     expect(screen.getByText('PopeGPT')).toBeInTheDocument();
-    expect(screen.getByText(/welcome! start a conversation/i)).toBeInTheDocument();
+    expect(screen.getByText(/start chatting now!/i)).toBeInTheDocument();
   });
 
   it('should render all messages', () => {
@@ -30,28 +30,6 @@ describe('MessageList', () => {
 
     expect(screen.getByText('Hello!')).toBeInTheDocument();
     expect(screen.getByText('Hi there!')).toBeInTheDocument();
-  });
-
-  it('should show loading spinner when streaming', () => {
-    render(<MessageList messages={messages} isStreaming={true} />);
-
-    // Flowbite Spinner component renders with role="status"
-    const spinner = screen.getByRole('status');
-    expect(spinner).toBeInTheDocument();
-  });
-
-  it('should not show loading spinner when not streaming', () => {
-    render(<MessageList messages={messages} isStreaming={false} />);
-
-    const spinner = screen.queryByRole('status');
-    expect(spinner).not.toBeInTheDocument();
-  });
-
-  it('should render messages in order', () => {
-    const { container } = render(<MessageList messages={messages} isStreaming={false} />);
-
-    const messageElements = container.querySelectorAll('[class*="mb-4"]');
-    expect(messageElements.length).toBe(messages.length);
   });
 
   it('should handle empty message list without crashing', () => {

@@ -221,15 +221,35 @@ global.Headers = class Headers {
   append(name, value) {
     this.headers[name.toLowerCase()] = value;
   }
+
+  entries() {
+    return Object.entries(this.headers);
+  }
+
+  keys() {
+    return Object.keys(this.headers);
+  }
+
+  values() {
+    return Object.values(this.headers);
+  }
+
+  forEach(callback) {
+    Object.entries(this.headers).forEach(([key, value]) => callback(value, key, this));
+  }
 };
 
 // Mock Request for edge runtime
 global.Request = class Request {
   constructor(url, init = {}) {
-    this.url = url;
+    this._url = url;
     this.method = init.method || 'GET';
     this.headers = new Headers(init.headers);
     this._bodyText = init.body;
+  }
+
+  get url() {
+    return this._url;
   }
 
   async json() {

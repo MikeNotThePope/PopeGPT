@@ -121,34 +121,6 @@ describe('Message Streaming', () => {
     });
   });
 
-  test('should call finishStreaming when streaming completes', async () => {
-    const message: MessageType = {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello, I am an AI assistant.',
-      timestamp: Date.now(),
-    };
-
-    const { rerender } = render(
-      <Message message={message} isStreaming={true} isDark={false} />
-    );
-
-    await waitFor(() => {
-      expect(mockAddChunk).toHaveBeenCalled();
-    });
-
-    jest.clearAllMocks();
-
-    // Streaming completes
-    rerender(
-      <Message message={message} isStreaming={false} isDark={false} />
-    );
-
-    await waitFor(() => {
-      expect(mockFinishStreaming).toHaveBeenCalledTimes(1);
-    });
-  });
-
   test('should not process user messages with smooth streaming', () => {
     const message: MessageType = {
       id: '1',

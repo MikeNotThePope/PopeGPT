@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -57,7 +57,7 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
     }
 
     // Calculate the delta (new chunk) for subsequent updates
-    if (currentContent.length > previousContent.length && previousContent !== '') {
+    if (currentContent.length > previousContent.length && (previousContent !== '' || previousStreamingRef.current)) {
       const chunk = currentContent.slice(previousContent.length);
       smoothStreamingRef.current.addChunk(chunk);
       previousContentRef.current = currentContent;
@@ -65,7 +65,7 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
   }, [message.content, isStreaming, isUser]);
 
   // Handle streaming completion
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isUser && previousStreamingRef.current && !isStreaming && smoothStreamingRef.current) {
       smoothStreamingRef.current.finishStreaming();
       previousStreamingRef.current = false;

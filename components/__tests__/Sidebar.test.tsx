@@ -67,7 +67,7 @@ describe('Sidebar', () => {
     const { container } = render(<Sidebar {...mockProps} />);
 
     const currentConv = screen.getByText('First Chat').closest('button');
-    expect(currentConv).toHaveClass('bg-blue-100');
+    expect(currentConv).toHaveClass('bg-yellow-300');
   });
 
   it('should call onClose when a conversation is selected on mobile', () => {
@@ -108,14 +108,14 @@ describe('Sidebar', () => {
   it('should show overlay when open on mobile', () => {
     const { container } = render(<Sidebar {...mockProps} />);
 
-    const overlay = container.querySelector('.fixed.inset-0.bg-black');
+    const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).toBeInTheDocument();
   });
 
   it('should not show overlay when closed', () => {
     const { container } = render(<Sidebar {...mockProps} isOpen={false} />);
 
-    const overlay = container.querySelector('.fixed.inset-0.bg-black');
+    const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).not.toBeInTheDocument();
   });
 

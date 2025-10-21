@@ -46,14 +46,14 @@ describe('Message', () => {
   it('should style user messages differently', () => {
     const { container } = render(<Message message={userMessage} />);
 
-    const messageDiv = container.querySelector('.bg-blue-600');
+    const messageDiv = container.querySelector('.bg-blue-400');
     expect(messageDiv).toBeInTheDocument();
   });
 
   it('should style assistant messages differently', () => {
     const { container } = render(<Message message={assistantMessage} />);
 
-    const messageDiv = container.querySelector('.bg-gray-100');
+    const messageDiv = container.querySelector('.bg-white');
     expect(messageDiv).toBeInTheDocument();
   });
 
