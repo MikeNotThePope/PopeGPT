@@ -25,8 +25,17 @@ export default function RootLayout({
               try {
                 const theme = localStorage.getItem('theme');
                 const favicon = document.getElementById('favicon');
+                let isDark = false;
 
-                if (theme === 'dark') {
+                // Check user preference first, then system preference
+                if (theme === 'dark' || theme === 'light') {
+                  isDark = theme === 'dark';
+                } else {
+                  // No user preference - use system preference
+                  isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+
+                if (isDark) {
                   document.documentElement.classList.add('dark');
                   if (favicon) favicon.href = '/favicon-dark.svg';
                 } else {

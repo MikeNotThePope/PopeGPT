@@ -9,9 +9,46 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    // Check if dark mode is enabled
-    const isDarkMode = document.documentElement.classList.contains('dark');
+
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    let isDarkMode = false;
+
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      isDarkMode = savedTheme === 'dark';
+    } else {
+      // No saved preference - use system preference
+      isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
     setIsDark(isDarkMode);
+
+    // Listen for system preference changes (only if no manual override)
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      // Only auto-update if user hasn't set a manual preference
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme || (savedTheme !== 'dark' && savedTheme !== 'light')) {
+        const newIsDark = e.matches;
+        setIsDark(newIsDark);
+
+        if (newIsDark) {
+          document.documentElement.classList.add('dark');
+          const favicon = document.getElementById('favicon') as HTMLLinkElement;
+          if (favicon) favicon.href = '/favicon-dark.svg';
+        } else {
+          document.documentElement.classList.remove('dark');
+          const favicon = document.getElementById('favicon') as HTMLLinkElement;
+          if (favicon) favicon.href = '/favicon.svg';
+        }
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    };
   }, []);
 
   const toggleTheme = () => {
