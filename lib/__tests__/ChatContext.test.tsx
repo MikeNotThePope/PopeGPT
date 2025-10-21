@@ -1,0 +1,162 @@
+import { render, renderHook, act } from '@testing-library/react';
+import { ChatProvider, useChatContext } from '../ChatContext';
+
+describe('ChatContext', () => {
+  it('should throw error when used outside provider', () => {
+    // Suppress console error for this test
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(() => {
+      renderHook(() => useChatContext());
+    }).toThrow('useChatContext must be used within a ChatProvider');
+
+    spy.mockRestore();
+  });
+
+  it('should initialize with a new conversation', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    expect(result.current.conversations).toHaveLength(1);
+    expect(result.current.currentConversationId).toBe(result.current.conversations[0].id);
+    expect(result.current.conversations[0].title).toBe('New Chat');
+    expect(result.current.conversations[0].messages).toEqual([]);
+  });
+
+  it('should add a user message', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    act(() => {
+      result.current.addMessage('Hello', 'user');
+    });
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.messages).toHaveLength(1);
+    expect(currentConv?.messages[0].content).toBe('Hello');
+    expect(currentConv?.messages[0].role).toBe('user');
+  });
+
+  it('should auto-generate conversation title from first user message', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    act(() => {
+      result.current.addMessage('What is the weather today?', 'user');
+    });
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.title).toBe('What is the weather today?');
+  });
+
+  it('should truncate long conversation titles', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    const longMessage = 'This is a very long message that should be truncated to 30 characters';
+
+    act(() => {
+      result.current.addMessage(longMessage, 'user');
+    });
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.title).toBe('This is a very long message th...');
+  });
+
+  it('should add an assistant message', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    act(() => {
+      result.current.addMessage('AI response', 'assistant');
+    });
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.messages).toHaveLength(1);
+    expect(currentConv?.messages[0].role).toBe('assistant');
+  });
+
+  it('should update last message', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    act(() => {
+      result.current.addMessage('Initial response', 'assistant');
+    });
+
+    act(() => {
+      result.current.updateLastMessage('Updated response');
+    });
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.messages[0].content).toBe('Updated response');
+  });
+
+  it('should create a new conversation', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    const initialConvId = result.current.currentConversationId;
+
+    act(() => {
+      result.current.createNewConversation();
+    });
+
+    expect(result.current.conversations).toHaveLength(2);
+    expect(result.current.currentConversationId).not.toBe(initialConvId);
+  });
+
+  it('should switch conversations', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    act(() => {
+      result.current.addMessage('Message in first chat', 'user');
+    });
+
+    const firstConvId = result.current.currentConversationId;
+
+    act(() => {
+      result.current.createNewConversation();
+    });
+
+    const secondConvId = result.current.currentConversationId;
+
+    act(() => {
+      result.current.switchConversation(firstConvId!);
+    });
+
+    expect(result.current.currentConversationId).toBe(firstConvId);
+
+    const currentConv = result.current.getCurrentConversation();
+    expect(currentConv?.messages[0].content).toBe('Message in first chat');
+  });
+
+  it('should manage streaming state', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    expect(result.current.isStreaming).toBe(false);
+
+    act(() => {
+      result.current.setIsStreaming(true);
+    });
+
+    expect(result.current.isStreaming).toBe(true);
+
+    act(() => {
+      result.current.setIsStreaming(false);
+    });
+
+    expect(result.current.isStreaming).toBe(false);
+  });
+});
