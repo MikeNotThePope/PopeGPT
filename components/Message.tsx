@@ -223,8 +223,12 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
                   const codeString = String(children).replace(/\n$/, '');
                   const codeId = `${message.id}-${match?.[1] || 'code'}`;
 
+                  // Better inline detection: treat as inline if no newlines in content
+                  const hasNewlines = /\n/.test(String(children));
+                  const isActuallyInline = inline || !hasNewlines;
+
                   // Block-level code (with or without language)
-                  if (!inline) {
+                  if (!isActuallyInline) {
                     if (match) {
                       // Code block WITH language - use syntax highlighting
                       return (
