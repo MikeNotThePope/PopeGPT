@@ -160,4 +160,44 @@ describe('Message - Copy Functionality', () => {
     expect(copyButton).toHaveAttribute('aria-label');
     expect(copyButton).toHaveAttribute('title');
   });
+
+  it('should show a retry button next to copy icon for a user question', () => {
+    const userMessage: MessageType = {
+      id: '1',
+      role: 'user',
+      content: 'What is the weather today?',
+      timestamp: Date.now(),
+    };
+
+    render(<Message message={userMessage} isDark={false} />);
+
+    // Verify copy button exists
+    const copyButton = screen.getByLabelText('Copy message');
+    expect(copyButton).toBeInTheDocument();
+
+    // Verify retry button exists next to copy button
+    const retryButton = screen.getByLabelText(/retry/i);
+    expect(retryButton).toBeInTheDocument();
+    expect(retryButton.tagName).toBe('BUTTON');
+  });
+
+  it('should show a retry button next to copy icon for an AI response', () => {
+    const assistantMessage: MessageType = {
+      id: '2',
+      role: 'assistant',
+      content: 'The weather is sunny today.',
+      timestamp: Date.now(),
+    };
+
+    render(<Message message={assistantMessage} isDark={false} />);
+
+    // Verify copy button exists
+    const copyButton = screen.getByLabelText('Copy message');
+    expect(copyButton).toBeInTheDocument();
+
+    // Verify retry button exists next to copy button
+    const retryButton = screen.getByLabelText(/retry/i);
+    expect(retryButton).toBeInTheDocument();
+    expect(retryButton.tagName).toBe('BUTTON');
+  });
 });

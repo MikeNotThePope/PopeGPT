@@ -8,7 +8,7 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { Message as MessageType } from '@/lib/types';
 import { STREAMING_CHARS_PER_SECOND } from '@/lib/constants';
-import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload } from 'react-icons/hi';
+import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload, HiRefresh } from 'react-icons/hi';
 import SmoothStreamingText, { SmoothStreamingTextRef } from './SmoothStreamingText';
 
 interface MessageProps {
@@ -206,19 +206,29 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
         )}
         </div>
 
-        {/* Copy button below message */}
-        <button
-          onClick={copyMessageToClipboard}
-          className="self-end p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
-          title={copiedMessage ? 'Copied!' : 'Copy message'}
-          aria-label={copiedMessage ? 'Copied!' : 'Copy message'}
-        >
-          {copiedMessage ? (
-            <HiClipboardCheck className="w-4 h-4" />
-          ) : (
-            <HiClipboard className="w-4 h-4" />
-          )}
-        </button>
+        {/* Action buttons below message */}
+        <div className="self-end flex items-center gap-2">
+          <button
+            onClick={copyMessageToClipboard}
+            className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+            title={copiedMessage ? 'Copied!' : 'Copy message'}
+            aria-label={copiedMessage ? 'Copied!' : 'Copy message'}
+          >
+            {copiedMessage ? (
+              <HiClipboardCheck className="w-4 h-4" />
+            ) : (
+              <HiClipboard className="w-4 h-4" />
+            )}
+          </button>
+          <button
+            onClick={() => {/* Retry functionality to be implemented */}}
+            className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+            title="Retry"
+            aria-label="Retry"
+          >
+            <HiRefresh className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
