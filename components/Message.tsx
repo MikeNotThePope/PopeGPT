@@ -15,11 +15,12 @@ interface MessageProps {
   message: MessageType;
   isDark?: boolean;
   isStreaming?: boolean;
+  isDataStreaming?: boolean; // Separate flag for actual data streaming vs animation
   onContentChange?: () => void;
   onAnimationComplete?: () => void;
 }
 
-const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, onContentChange, onAnimationComplete }, ref) => {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
   const previousContentRef = useRef<string>('');
@@ -67,12 +68,15 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
   }, [message.content, isStreaming, isUser]);
 
   // Handle streaming completion
+  // Use isDataStreaming if provided, otherwise fall back to isStreaming
+  const dataStreamingFlag = isDataStreaming !== undefined ? isDataStreaming : isStreaming;
+
   useLayoutEffect(() => {
-    if (!isUser && previousStreamingRef.current && !isStreaming && smoothStreamingRef.current) {
+    if (!isUser && previousStreamingRef.current && !dataStreamingFlag && smoothStreamingRef.current) {
       smoothStreamingRef.current.finishStreaming();
       previousStreamingRef.current = false;
     }
-  }, [isStreaming, isUser]);
+  }, [dataStreamingFlag, isUser]);
 
   return (
     <div

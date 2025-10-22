@@ -8,11 +8,12 @@ import { Message as MessageType } from '@/lib/types';
 interface MessageListProps {
   messages: MessageType[];
   isStreaming: boolean;
+  isAnimating?: boolean;
   isDark?: boolean;
   onAnimationComplete?: () => void;
 }
 
-export default function MessageList({ messages, isStreaming, isDark = false, onAnimationComplete }: MessageListProps) {
+export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, onAnimationComplete }: MessageListProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const appName = useMemo(() => `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`, []);
   const scrollAnimationFrame = useRef<number | null>(null);
@@ -96,17 +97,21 @@ export default function MessageList({ messages, isStreaming, isDark = false, onA
       style={{ height: '100%' }}
       followOutput="smooth"
       alignToBottom
-      itemContent={(index, message) => (
-        <div className="px-4 py-3">
-          <Message
-            message={message}
-            isDark={isDark}
-            isStreaming={isStreaming && index === messages.length - 1}
-            onContentChange={scrollToBottomImmediate}
-            onAnimationComplete={onAnimationComplete}
-          />
-        </div>
-      )}
+      itemContent={(index, message) => {
+        const isLastMessage = index === messages.length - 1;
+        return (
+          <div className="px-4 py-3">
+            <Message
+              message={message}
+              isDark={isDark}
+              isStreaming={(isStreaming || isAnimating) && isLastMessage}
+              isDataStreaming={isStreaming && isLastMessage}
+              onContentChange={scrollToBottomImmediate}
+              onAnimationComplete={onAnimationComplete}
+            />
+          </div>
+        );
+      }}
       components={{
         // Add top padding
         Header: () => <div className="py-3" />,

@@ -24,7 +24,7 @@ export default function ChatInterface() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const pendingAnimationComplete = React.useRef(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   React.useEffect(() => {
     // Monitor dark mode changes
@@ -48,7 +48,7 @@ export default function ChatInterface() {
     if (!currentConversation || isStreaming) return;
 
     setIsStreaming(true);
-    pendingAnimationComplete.current = false;
+    setIsAnimating(false);
 
     try {
       // Prepare messages for API (before adding to state to avoid race condition)
@@ -143,13 +143,11 @@ export default function ChatInterface() {
       }
 
       // Mark that we're waiting for animation to complete
-      pendingAnimationComplete.current = true;
+      setIsAnimating(true);
 
-      // Trigger animation completion by briefly delaying to allow final render
-      // This ensures the Message component receives the final content before isStreaming becomes false
-      requestAnimationFrame(() => {
-        setIsStreaming(false);
-      });
+      // Set isStreaming to false to trigger finishStreaming() in Message component
+      // But input will stay disabled because isAnimating is true
+      setIsStreaming(false);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error sending message:', error);
@@ -158,17 +156,14 @@ export default function ChatInterface() {
         'Sorry, there was an error processing your request. Please try again.',
         'assistant'
       );
-      // On error, stop streaming immediately
+      // On error, stop streaming and animating immediately
       setIsStreaming(false);
-      pendingAnimationComplete.current = false;
+      setIsAnimating(false);
     }
   };
 
   const handleAnimationComplete = () => {
-    if (pendingAnimationComplete.current) {
-      setIsStreaming(false);
-      pendingAnimationComplete.current = false;
-    }
+    setIsAnimating(false);
   };
 
   return (
@@ -198,10 +193,14 @@ export default function ChatInterface() {
         <MessageList
           messages={currentConversation?.messages || []}
           isStreaming={isStreaming}
+          isAnimating={isAnimating}
           isDark={isDark}
           onAnimationComplete={handleAnimationComplete}
         />
-        <MessageInput onSend={handleSendMessage} disabled={isStreaming} />
+        <MessageInput
+          onSend={handleSendMessage}
+          disabled={isStreaming || isAnimating}
+        />
       </div>
     </div>
   );
