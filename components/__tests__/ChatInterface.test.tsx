@@ -1,22 +1,31 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { forwardRef } from 'react';
 import userEvent from '@testing-library/user-event';
 import ChatInterface from '../ChatInterface';
 import { ChatProvider } from '@/lib/ChatContext';
 
 // Mock react-virtuoso to render all items directly
-jest.mock('react-virtuoso', () => ({
-  Virtuoso: ({ data, itemContent, components }: any) => {
-    return (
-      <div>
-        {components?.Header && <components.Header />}
-        {data.map((item: any, index: number) => (
-          <div key={index}>{itemContent(index, item)}</div>
-        ))}
-        {components?.Footer && <components.Footer />}
-      </div>
-    );
-  },
-}));
+jest.mock('react-virtuoso', () => {
+  const React = require('react');
+  return {
+    Virtuoso: React.forwardRef(({ data, itemContent, components }: any, ref: any) => {
+      // Provide the scrollToIndex method that MessageList expects
+      React.useImperativeHandle(ref, () => ({
+        scrollToIndex: jest.fn(),
+      }));
+
+      return (
+        <div>
+          {components?.Header && <components.Header />}
+          {data.map((item: any, index: number) => (
+            <div key={index}>{itemContent(index, item)}</div>
+          ))}
+          {components?.Footer && <components.Footer />}
+        </div>
+      );
+    }),
+  };
+});
 
 // Mock fetch
 global.fetch = jest.fn();

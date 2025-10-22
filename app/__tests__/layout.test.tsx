@@ -16,6 +16,21 @@ jest.mock('next/font/google', () => ({
 }));
 
 describe('RootLayout', () => {
+  // Suppress console warnings for DOM nesting in layout tests
+  // This is expected when testing Next.js layout components that return <html> tags
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation((message) => {
+      if (typeof message === 'string' && message.includes('validateDOMNesting')) {
+        return;
+      }
+      console.error(message);
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should render children wrapped in ChatProvider', () => {
     render(
       <RootLayout>

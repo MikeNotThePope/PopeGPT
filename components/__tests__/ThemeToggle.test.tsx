@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ThemeToggle from '../ThemeToggle';
 
 describe('ThemeToggle', () => {
@@ -157,7 +157,9 @@ describe('ThemeToggle', () => {
 
     // Simulate system theme change to dark
     if (changeListener) {
-      changeListener({ matches: true } as MediaQueryListEvent);
+      act(() => {
+        changeListener({ matches: true } as MediaQueryListEvent);
+      });
 
       await waitFor(() => {
         const favicon = document.getElementById('favicon') as HTMLLinkElement;

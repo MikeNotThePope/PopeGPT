@@ -17,7 +17,7 @@ interface MessageProps {
   onContentChange?: () => void;
 }
 
-function MessageComponent({ message, isDark = false, isStreaming = false, onContentChange }: MessageProps) {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, onContentChange }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
   const previousContentRef = useRef<string>('');
@@ -74,6 +74,7 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
 
   return (
     <div
+      ref={ref}
       className={`flex w-full ${
         isUser ? 'justify-end' : 'justify-start'
       } mb-5 message-content`}
@@ -191,7 +192,9 @@ function MessageComponent({ message, isDark = false, isStreaming = false, onCont
       </div>
     </div>
   );
-}
+});
+
+MessageComponent.displayName = 'MessageComponent';
 
 const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
   // During streaming, always re-render to process new chunks
@@ -218,5 +221,7 @@ const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
          prevProps.isStreaming === nextProps.isStreaming &&
          attachmentsEqual;
 });
+
+Message.displayName = 'Message';
 
 export default Message;
