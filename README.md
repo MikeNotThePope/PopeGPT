@@ -4,7 +4,10 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
 
 ## Features
 
-- **Streaming Responses**: Real-time word-by-word AI responses
+- **Streaming Responses**: Real-time word-by-word AI responses with configurable speed
+- **Message Editing**: Edit previous messages and regenerate responses with conversation branching
+- **Retry Functionality**: Retry any message to regenerate responses
+- **Smart Auto-Scroll**: Automatically scrolls to new messages, pauses during editing
 - **Beautiful UI**: Modern, responsive interface using Flowbite components
 - **Dark Mode**: Toggle between light and dark themes with theme-aware favicons
 - **Customizable Branding**: Set your username to personalize the app name and favicon
@@ -52,13 +55,19 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
    ```
    OPENROUTER_API_KEY=your_actual_api_key_here
    NEXT_PUBLIC_USERNAME=Pope
+   NEXT_PUBLIC_STREAMING_SPEED=50
    ```
 
-   **Customization**: Change `NEXT_PUBLIC_USERNAME` to personalize the app! For example:
-   - `NEXT_PUBLIC_USERNAME=Mike` → "MikeGPT" with "M" favicon
-   - `NEXT_PUBLIC_USERNAME=Sarah` → "SarahGPT" with "S" favicon
-   - The app name appears in the UI, page title, AI system prompt, and favicon
-   - Favicon dynamically shows the first letter (case-sensitive)
+   **Customization Options**:
+   - `NEXT_PUBLIC_USERNAME`: Personalize the app name and favicon
+     - Example: `Mike` → "MikeGPT" with "M" favicon
+     - Example: `Sarah` → "SarahGPT" with "S" favicon
+     - Appears in UI, page title, AI system prompt, and favicon
+     - Favicon shows first letter (case-sensitive)
+   - `NEXT_PUBLIC_STREAMING_SPEED`: Characters per second for typewriter effect (default: 50)
+     - Recommended: 40-60 for ChatGPT-like feel
+     - Fast: 80-120 for quick responses
+     - Slow: 10-15 for classic typewriter effect
 
 5. Run the development server:
    ```bash
@@ -78,6 +87,7 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
 5. Add environment variables:
    - `OPENROUTER_API_KEY`: Your OpenRouter API key
    - `NEXT_PUBLIC_USERNAME`: Your custom username (default: "Pope")
+   - `NEXT_PUBLIC_STREAMING_SPEED`: Streaming speed in chars/sec (default: 50, optional)
 6. Click "Deploy"
 
 ### Option 2: Deploy via Vercel CLI
@@ -101,6 +111,7 @@ A production-ready AI chat interface powered by Claude 3 Haiku via OpenRouter, b
    ```bash
    vercel env add OPENROUTER_API_KEY
    vercel env add NEXT_PUBLIC_USERNAME
+   vercel env add NEXT_PUBLIC_STREAMING_SPEED  # Optional, default: 50
    ```
    Enter your values when prompted.
 
