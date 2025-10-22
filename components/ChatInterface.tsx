@@ -5,7 +5,7 @@ import { useChatContext } from '@/lib/ChatContext';
 import { FileAttachment } from '@/lib/types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
-import MessageInput from './MessageInput';
+import MessageInput, { MessageInputRef } from './MessageInput';
 import { HiMenu } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
 
@@ -21,11 +21,14 @@ export default function ChatInterface() {
     isStreaming,
     setIsStreaming,
     truncateMessagesAfter,
+    removeMessagesFrom,
   } = useChatContext();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [editingMessageContent, setEditingMessageContent] = useState<string | null>(null);
+  const messageInputRef = useRef<MessageInputRef>(null);
 
   React.useEffect(() => {
     // Monitor dark mode changes
@@ -165,6 +168,41 @@ export default function ChatInterface() {
 
   const handleAnimationComplete = () => {
     setIsAnimating(false);
+  };
+
+  const handleEdit = (messageId: string) => {
+    if (!currentConversation) {
+      return;
+    }
+
+    // Reset streaming states
+    if (isStreaming || isAnimating) {
+      setIsStreaming(false);
+      setIsAnimating(false);
+    }
+
+    // Find the message
+    const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) {
+      return;
+    }
+
+    const message = currentConversation.messages[messageIndex];
+    if (message.role !== 'user') {
+      return;
+    }
+
+    // Remove this message and everything after it
+    removeMessagesFrom(messageId);
+
+    // Set the message content to be edited
+    setEditingMessageContent(message.content);
+
+    // Focus the input and set its value
+    if (messageInputRef.current) {
+      messageInputRef.current.setValue(message.content);
+      messageInputRef.current.focus();
+    }
   };
 
   const handleRetry = async (messageId: string) => {
@@ -358,8 +396,10 @@ export default function ChatInterface() {
           isDark={isDark}
           onAnimationComplete={handleAnimationComplete}
           onRetry={handleRetry}
+          onEdit={handleEdit}
         />
         <MessageInput
+          ref={messageInputRef}
           onSend={handleSendMessage}
           disabled={isStreaming || isAnimating}
         />

@@ -32,4 +32,5 @@ export interface ChatContextType {
   isStreaming: boolean;
   setIsStreaming: (value: boolean) => void;
   truncateMessagesAfter: (messageId: string) => void;
+  removeMessagesFrom: (messageId: string) => void;
 }

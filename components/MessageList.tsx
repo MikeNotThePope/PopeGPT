@@ -12,9 +12,10 @@ interface MessageListProps {
   isDark?: boolean;
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
+  onEdit?: (messageId: string) => void;
 }
 
-export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, onAnimationComplete, onRetry }: MessageListProps) {
+export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, onAnimationComplete, onRetry, onEdit }: MessageListProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const appName = useMemo(() => `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`, []);
   const scrollAnimationFrame = useRef<number | null>(null);
@@ -109,6 +110,7 @@ export default function MessageList({ messages, isStreaming, isAnimating = false
               onContentChange={scrollToBottomImmediate}
               onAnimationComplete={onAnimationComplete}
               onRetry={onRetry}
+              onEdit={onEdit}
             />
           </div>
         );

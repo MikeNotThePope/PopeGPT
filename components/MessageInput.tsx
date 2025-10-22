@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
+import React, { useState, useRef, KeyboardEvent, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Button, Textarea, Spinner } from 'flowbite-react';
 import { HiPaperAirplane, HiPaperClip, HiX } from 'react-icons/hi';
 import { FileAttachment } from '@/lib/types';
@@ -11,12 +11,27 @@ interface MessageInputProps {
   disabled?: boolean;
 }
 
-export default function MessageInput({ onSend, disabled = false }: MessageInputProps) {
+export interface MessageInputRef {
+  focus: () => void;
+  setValue: (value: string) => void;
+}
+
+const MessageInput = forwardRef<MessageInputRef, MessageInputProps>(({ onSend, disabled = false }, ref) => {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textareaRef.current?.focus();
+    },
+    setValue: (value: string) => {
+      setInput(value);
+    },
+  }));
 
   // Auto-focus when AI finishes responding
   useEffect(() => {
@@ -237,4 +252,8 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
       </div>
     </div>
   );
-}
+});
+
+MessageInput.displayName = 'MessageInput';
+
+export default MessageInput;
