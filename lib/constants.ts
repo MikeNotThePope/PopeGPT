@@ -37,5 +37,8 @@ export const MAX_REQUEST_BODY_SIZE = 15 * 1024 * 1024; // 15MB (to account for b
 export const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 export const RATE_LIMIT_MAX_REQUESTS = 20; // 20 requests per minute
 
-// Streaming animation speed
-export const STREAMING_CHARS_PER_SECOND = 1; // Characters per second for typewriter effect
+// Streaming animation speed (configurable via NEXT_PUBLIC_STREAMING_SPEED, default: 50)
+export const STREAMING_CHARS_PER_SECOND = parseInt(
+  process.env.NEXT_PUBLIC_STREAMING_SPEED || '50',
+  10
+); // Characters per second for typewriter effect

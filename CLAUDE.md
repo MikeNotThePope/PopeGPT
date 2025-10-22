@@ -39,6 +39,10 @@ vercel --prod        # Deploy to production
   - Appears in UI header, page title, AI system prompt, and favicon
   - Favicon dynamically generated via `/api/favicon` and `/api/favicon-dark` routes
   - Shows first letter of username (case-sensitive)
+- **Streaming Speed**: Configurable via `NEXT_PUBLIC_STREAMING_SPEED` (default: 50)
+  - Characters per second for typewriter animation effect
+  - Higher values = faster streaming, lower = slower typewriter effect
+  - Recommended: 40-60 for ChatGPT-like feel, 80-120 for very fast, 10-15 for classic typewriter
 - **Template**: Copy `.env.example` to `.env` and add your configuration
 - The `.env` file is gitignored and should never be committed
 

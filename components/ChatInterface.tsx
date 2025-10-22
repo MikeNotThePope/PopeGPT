@@ -144,6 +144,12 @@ export default function ChatInterface() {
 
       // Mark that we're waiting for animation to complete
       pendingAnimationComplete.current = true;
+
+      // Trigger animation completion by briefly delaying to allow final render
+      // This ensures the Message component receives the final content before isStreaming becomes false
+      requestAnimationFrame(() => {
+        setIsStreaming(false);
+      });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error sending message:', error);

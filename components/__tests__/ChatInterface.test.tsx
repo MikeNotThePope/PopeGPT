@@ -125,13 +125,13 @@ describe('ChatInterface', () => {
     });
   });
 
-  it.skip('should handle streaming state', async () => {
+  it('should allow user to enter text after AI finishes responding', async () => {
     const user = userEvent.setup();
 
     // Mock streaming response
     const mockReadableStream = new ReadableStream({
       start(controller) {
-        controller.enqueue(new TextEncoder().encode('data: {"content":"Response"}\n\n'));
+        controller.enqueue(new TextEncoder().encode('data: {"content":"AI Response"}\n\n'));
         controller.close();
       },
     });
@@ -143,17 +143,30 @@ describe('ChatInterface', () => {
 
     renderChatInterface();
 
-    const input = screen.getByPlaceholderText(/type your message/i);
-    await user.type(input, 'Test');
+    const input = screen.getByPlaceholderText(/type your message/i) as HTMLTextAreaElement;
 
+    // Input should start enabled
+    expect(input).not.toBeDisabled();
+
+    // Send a message
+    await user.type(input, 'Test message');
     const sendButton = screen.getByRole('button', { name: /send/i });
     await user.click(sendButton);
 
-    // Wait for the response to be processed
+    // Input should be disabled while streaming
+    expect(input).toBeDisabled();
+
+    // Wait for streaming to complete and input to be re-enabled
     await waitFor(() => {
-      // Input should be enabled after streaming completes
       expect(input).not.toBeDisabled();
     }, { timeout: 3000 });
+
+    // Verify user can type again after AI responds
+    await user.type(input, 'Follow-up message');
+    expect(input.value).toBe('Follow-up message');
+
+    // Verify send button is enabled again
+    expect(sendButton).not.toBeDisabled();
   });
 
   it('should show error message on API failure', async () => {

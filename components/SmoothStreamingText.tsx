@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { useSmoothStreaming } from '@/lib/useSmoothStreaming';
+import { STREAMING_CHARS_PER_SECOND } from '@/lib/constants';
 import { HiClipboard, HiClipboardCheck } from 'react-icons/hi';
 
 interface SmoothStreamingTextProps {
@@ -35,7 +36,7 @@ interface SmoothStreamingTextProps {
   onAnimationComplete?: () => void;
 
   /**
-   * Characters per second for typewriter effect (default: 1)
+   * Characters per second for typewriter effect (default: 50)
    */
   charsPerSecond?: number;
 }
@@ -48,7 +49,7 @@ export interface SmoothStreamingTextRef {
 }
 
 const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTextProps>(
-  ({ messageId, finalMessageContent, isDark = false, onContentChange, onAnimationComplete, charsPerSecond = 1 }, ref) => {
+  ({ messageId, finalMessageContent, isDark = false, onContentChange, onAnimationComplete, charsPerSecond = STREAMING_CHARS_PER_SECOND }, ref) => {
     const textRef = useRef<HTMLDivElement>(null);
     const [isStreamingComplete, setIsStreamingComplete] = useState(false);
     const [isActivelyStreaming, setIsActivelyStreaming] = useState(false);

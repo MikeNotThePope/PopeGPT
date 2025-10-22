@@ -408,7 +408,7 @@ describe('SmoothStreamingText', () => {
     // Check that useSmoothStreaming was called with the default value
     expect(useSmoothStreaming).toHaveBeenCalledWith(
       expect.objectContaining({
-        charsPerSecond: 1,
+        charsPerSecond: 50,
       })
     );
   });

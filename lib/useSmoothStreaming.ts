@@ -1,8 +1,9 @@
 import { useRef, useCallback, useEffect } from 'react';
+import { STREAMING_CHARS_PER_SECOND } from './constants';
 
 interface SmoothStreamingOptions {
   /**
-   * Characters per second to display (default: 1)
+   * Characters per second to display (default: 50)
    * Higher = faster typing effect
    */
   charsPerSecond?: number;
@@ -20,7 +21,7 @@ interface SmoothStreamingOptions {
 
 export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
   const {
-    charsPerSecond = 1,
+    charsPerSecond = STREAMING_CHARS_PER_SECOND,
     onUpdate,
     onComplete,
   } = options;
