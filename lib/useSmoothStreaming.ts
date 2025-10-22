@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect } from 'react';
 
 interface SmoothStreamingOptions {
   /**
-   * Characters per second to display (default: 80)
+   * Characters per second to display (default: 1)
    * Higher = faster typing effect
    */
   charsPerSecond?: number;
@@ -20,7 +20,7 @@ interface SmoothStreamingOptions {
 
 export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
   const {
-    charsPerSecond = 80,
+    charsPerSecond = 1,
     onUpdate,
     onComplete,
   } = options;
@@ -35,6 +35,7 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
   const lastFrameTime = useRef<number>(0);
   const isStreamingActive = useRef<boolean>(false);
   const isComplete = useRef<boolean>(false);
+  const charAccumulator = useRef<number>(0); // Fractional character accumulator
 
   // Store callbacks in refs to avoid recreating animate function
   const onUpdateRef = useRef(onUpdate);
@@ -75,13 +76,20 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
     const deltaTime = currentTime - lastFrameTime.current;
     lastFrameTime.current = currentTime;
 
-    // Calculate how many characters to add this frame
-    // Using deltaTime to account for variable frame rates
-    // Cap at 5 chars per frame to prevent jumps
-    const charsToAdd = Math.max(1, Math.min(5, Math.floor((deltaTime / 1000) * charsPerSecond)));
+    // Accumulate fractional characters based on time elapsed
+    // This allows for slow speeds (e.g., 1 char/sec = 0.0167 chars/frame at 60fps)
+    const charsProgress = (deltaTime / 1000) * charsPerSecond;
+    charAccumulator.current += charsProgress;
 
-    // Update display if we have more text to show
-    if (displayIndex.current < fullTextBuffer.current.length) {
+    // Only advance when we've accumulated at least 1 character worth of progress
+    const charsToAdd = Math.floor(charAccumulator.current);
+
+    if (charsToAdd > 0) {
+      charAccumulator.current -= charsToAdd; // Keep the fractional remainder
+    }
+
+    // Update display if we have characters to add and more text to show
+    if (charsToAdd > 0 && displayIndex.current < fullTextBuffer.current.length) {
       const newIndex = Math.min(
         displayIndex.current + charsToAdd,
         fullTextBuffer.current.length
@@ -94,8 +102,10 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
       if (onUpdateRef.current) {
         onUpdateRef.current(displayedText.current);
       }
+    }
 
-      // Continue animation
+    // Continue animation if there's more to show
+    if (displayIndex.current < fullTextBuffer.current.length) {
       animationFrameId.current = requestAnimationFrame(animate);
     } else if (isComplete.current) {
       // Streaming is complete and we've displayed all text
@@ -157,6 +167,7 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}) {
     isStreamingActive.current = false;
     isComplete.current = false;
     lastFrameTime.current = 0;
+    charAccumulator.current = 0;
   }, [cleanup]);
 
   // Skip animation and show all text immediately

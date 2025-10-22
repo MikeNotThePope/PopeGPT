@@ -393,7 +393,7 @@ describe('SmoothStreamingText', () => {
     );
   });
 
-  it('should use default charsPerSecond of 80 if not provided', () => {
+  it('should use default charsPerSecond of 1 if not provided', () => {
     const useSmoothStreaming = require('@/lib/useSmoothStreaming').useSmoothStreaming;
     const ref = createRef<SmoothStreamingTextRef>();
 
@@ -408,7 +408,7 @@ describe('SmoothStreamingText', () => {
     // Check that useSmoothStreaming was called with the default value
     expect(useSmoothStreaming).toHaveBeenCalledWith(
       expect.objectContaining({
-        charsPerSecond: 80,
+        charsPerSecond: 1,
       })
     );
   });

@@ -7,6 +7,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { Message as MessageType } from '@/lib/types';
+import { STREAMING_CHARS_PER_SECOND } from '@/lib/constants';
 import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload } from 'react-icons/hi';
 import SmoothStreamingText, { SmoothStreamingTextRef } from './SmoothStreamingText';
 
@@ -15,9 +16,10 @@ interface MessageProps {
   isDark?: boolean;
   isStreaming?: boolean;
   onContentChange?: () => void;
+  onAnimationComplete?: () => void;
 }
 
-const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, onContentChange }, ref) => {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, onContentChange, onAnimationComplete }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
   const previousContentRef = useRef<string>('');
@@ -133,7 +135,8 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
             finalMessageContent={message.content}
             isDark={isDark}
             onContentChange={onContentChange}
-            charsPerSecond={80}
+            onAnimationComplete={onAnimationComplete}
+            charsPerSecond={STREAMING_CHARS_PER_SECOND}
           />
         ) : (
           <div className="prose dark:prose-invert max-w-none prose-p:font-bold prose-li:font-bold prose-headings:font-black leading-relaxed font-bold text-black dark:text-white">

@@ -30,7 +30,12 @@ interface SmoothStreamingTextProps {
   onContentChange?: () => void;
 
   /**
-   * Characters per second for typewriter effect
+   * Callback when animation completes
+   */
+  onAnimationComplete?: () => void;
+
+  /**
+   * Characters per second for typewriter effect (default: 1)
    */
   charsPerSecond?: number;
 }
@@ -43,7 +48,7 @@ export interface SmoothStreamingTextRef {
 }
 
 const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTextProps>(
-  ({ messageId, finalMessageContent, isDark = false, onContentChange, charsPerSecond = 80 }, ref) => {
+  ({ messageId, finalMessageContent, isDark = false, onContentChange, onAnimationComplete, charsPerSecond = 1 }, ref) => {
     const textRef = useRef<HTMLDivElement>(null);
     const [isStreamingComplete, setIsStreamingComplete] = useState(false);
     const [isActivelyStreaming, setIsActivelyStreaming] = useState(false);
@@ -78,6 +83,11 @@ const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTe
         // Streaming complete - remove will-change and switch to markdown rendering
         setIsActivelyStreaming(false);
         setIsStreamingComplete(true);
+
+        // Notify parent that animation is complete
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
       },
     });
 

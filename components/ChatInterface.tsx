@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useChatContext } from '@/lib/ChatContext';
 import { FileAttachment } from '@/lib/types';
 import Sidebar from './Sidebar';
@@ -24,6 +24,7 @@ export default function ChatInterface() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const pendingAnimationComplete = React.useRef(false);
 
   React.useEffect(() => {
     // Monitor dark mode changes
@@ -47,6 +48,7 @@ export default function ChatInterface() {
     if (!currentConversation || isStreaming) return;
 
     setIsStreaming(true);
+    pendingAnimationComplete.current = false;
 
     try {
       // Prepare messages for API (before adding to state to avoid race condition)
@@ -139,6 +141,9 @@ export default function ChatInterface() {
       } else {
         updateLastMessage(assistantMessage);
       }
+
+      // Mark that we're waiting for animation to complete
+      pendingAnimationComplete.current = true;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error sending message:', error);
@@ -147,8 +152,16 @@ export default function ChatInterface() {
         'Sorry, there was an error processing your request. Please try again.',
         'assistant'
       );
-    } finally {
+      // On error, stop streaming immediately
       setIsStreaming(false);
+      pendingAnimationComplete.current = false;
+    }
+  };
+
+  const handleAnimationComplete = () => {
+    if (pendingAnimationComplete.current) {
+      setIsStreaming(false);
+      pendingAnimationComplete.current = false;
     }
   };
 
@@ -180,6 +193,7 @@ export default function ChatInterface() {
           messages={currentConversation?.messages || []}
           isStreaming={isStreaming}
           isDark={isDark}
+          onAnimationComplete={handleAnimationComplete}
         />
         <MessageInput onSend={handleSendMessage} disabled={isStreaming} />
       </div>
