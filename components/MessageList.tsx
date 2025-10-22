@@ -12,7 +12,7 @@ interface MessageListProps {
   isDark?: boolean;
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
-  onEdit?: (messageId: string) => void;
+  onEdit?: (messageId: string, newContent: string) => void;
 }
 
 export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, onAnimationComplete, onRetry, onEdit }: MessageListProps) {

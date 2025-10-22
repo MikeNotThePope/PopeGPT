@@ -7,7 +7,7 @@ import { Message as MessageType } from '@/lib/types';
 import { ChatProvider, useChatContext } from '@/lib/ChatContext';
 
 describe('Message - Edit Functionality', () => {
-  it('should call onEdit callback when edit button is clicked on a user message', async () => {
+  it('should show inline editor when edit button is clicked and call onEdit when saved', async () => {
     const user = userEvent.setup();
     const mockOnEdit = jest.fn();
 
@@ -20,14 +20,29 @@ describe('Message - Edit Functionality', () => {
 
     render(<Message message={userMessage} isDark={false} onEdit={mockOnEdit} />);
 
+    // Click edit button
     const editButton = screen.getByLabelText(/edit/i);
     await user.click(editButton);
 
+    // Should show inline textarea with current content
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(textarea).toBeInTheDocument();
+    expect(textarea.value).toBe('What is the weather today?');
+
+    // Edit the content
+    await user.clear(textarea);
+    await user.type(textarea, 'What is the temperature?');
+
+    // Click save
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // Should call onEdit with messageId and new content
     expect(mockOnEdit).toHaveBeenCalledTimes(1);
-    expect(mockOnEdit).toHaveBeenCalledWith('1');
+    expect(mockOnEdit).toHaveBeenCalledWith('1', 'What is the temperature?');
   });
 
-  it('should truncate messages after the edited message when edit is clicked', async () => {
+  it('should truncate messages after the edited message when save is clicked', async () => {
     const user = userEvent.setup();
 
     function TestComponent() {
@@ -45,7 +60,7 @@ describe('Message - Edit Functionality', () => {
       const messages = conversation?.messages || [];
       const q1Message = messages[0]; // Question 1
 
-      const handleEdit = (messageId: string) => {
+      const handleEdit = (messageId: string, newContent: string) => {
         truncateMessagesAfter(messageId);
       };
 
@@ -86,7 +101,20 @@ describe('Message - Edit Functionality', () => {
     const editButton = screen.getByLabelText(/edit/i);
     await user.click(editButton);
 
-    // After edit on Q1, should truncate to [Q1]
+    // Should show inline editor
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(textarea).toBeInTheDocument();
+
+    // Messages should still be 4 (not truncated yet)
+    expect(screen.getByTestId('message-count')).toHaveTextContent('4');
+
+    // Edit and save
+    await user.clear(textarea);
+    await user.type(textarea, 'Edited Question 1');
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // After save, should truncate to [Q1]
     await waitFor(() => {
       expect(screen.getByTestId('message-count')).toHaveTextContent('1');
     });
@@ -99,12 +127,11 @@ describe('Message - Edit Functionality', () => {
     expect(updatedMessagesJson).not.toHaveTextContent('Response 2');
   });
 
-  it('should provide the original message content to allow editing', async () => {
+  it('should populate the inline editor with the original message content', async () => {
     const user = userEvent.setup();
-    const mockGetMessageContent = jest.fn();
 
     function TestComponent() {
-      const { addMessage, getCurrentConversation, truncateMessagesAfter } = useChatContext();
+      const { addMessage, getCurrentConversation } = useChatContext();
 
       React.useEffect(() => {
         // Build conversation: Q1, R1
@@ -116,13 +143,8 @@ describe('Message - Edit Functionality', () => {
       const messages = conversation?.messages || [];
       const q1Message = messages[0];
 
-      const handleEdit = (messageId: string) => {
-        const message = messages.find(m => m.id === messageId);
-        if (message) {
-          // Store the original content for editing
-          mockGetMessageContent(message.content);
-          truncateMessagesAfter(messageId);
-        }
+      const handleEdit = (messageId: string, newContent: string) => {
+        // Mock handler
       };
 
       return (
@@ -153,9 +175,10 @@ describe('Message - Edit Functionality', () => {
     const editButton = screen.getByLabelText(/edit/i);
     await user.click(editButton);
 
-    // Verify the original content was retrieved
-    expect(mockGetMessageContent).toHaveBeenCalledTimes(1);
-    expect(mockGetMessageContent).toHaveBeenCalledWith('What is the weather?');
+    // Verify the inline textarea is populated with original content
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(textarea).toBeInTheDocument();
+    expect(textarea.value).toBe('What is the weather?');
   });
 
   it('should handle edit on a message in the middle of the conversation', async () => {
@@ -178,7 +201,7 @@ describe('Message - Edit Functionality', () => {
       const messages = conversation?.messages || [];
       const q2Message = messages[2]; // Question 2 (index 2)
 
-      const handleEdit = (messageId: string) => {
+      const handleEdit = (messageId: string, newContent: string) => {
         truncateMessagesAfter(messageId);
       };
 
@@ -212,7 +235,20 @@ describe('Message - Edit Functionality', () => {
     const editButton = screen.getByLabelText(/edit/i);
     await user.click(editButton);
 
-    // After edit on Q2, should truncate to [Q1, R1, Q2]
+    // Should show inline editor
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(textarea).toBeInTheDocument();
+
+    // Messages should still be 6 (not truncated yet)
+    expect(screen.getByTestId('message-count')).toHaveTextContent('6');
+
+    // Edit and save
+    await user.clear(textarea);
+    await user.type(textarea, 'Edited Question 2');
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // After save on Q2, should truncate to [Q1, R1, Q2]
     await waitFor(() => {
       expect(screen.getByTestId('message-count')).toHaveTextContent('3');
     });

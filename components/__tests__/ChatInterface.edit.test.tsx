@@ -79,7 +79,7 @@ describe('ChatInterface - Edit Functionality', () => {
     );
   };
 
-  it('should populate message input with original content when edit is clicked', async () => {
+  it('should show inline editor when edit is clicked and send new message when saved', async () => {
     const user = userEvent.setup();
 
     const createMockStream = (content: string) => {
@@ -91,9 +91,14 @@ describe('ChatInterface - Edit Functionality', () => {
       });
     };
 
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      body: createMockStream('Response 1'),
+    let callCount = 0;
+    (global.fetch as jest.Mock).mockImplementation(() => {
+      callCount++;
+      const response = callCount === 1 ? 'Response 1' : 'Edited Response';
+      return Promise.resolve({
+        ok: true,
+        body: createMockStream(response),
+      });
     });
 
     renderChatInterface();
@@ -113,15 +118,31 @@ describe('ChatInterface - Edit Functionality', () => {
 
     // Find and click the edit button on the user message
     const editButtons = screen.getAllByLabelText('Edit');
-    await user.click(editButtons[0]); // Click edit on the user message
+    await user.click(editButtons[0]);
 
-    // Input should now contain the original message
+    // Should show inline editor with original content
+    const textareas = screen.getAllByRole('textbox');
+    const editTextarea = textareas.find(ta => (ta as HTMLTextAreaElement).value === 'Original question') as HTMLTextAreaElement;
+    expect(editTextarea).toBeInTheDocument();
+
+    // Edit the content
+    await user.clear(editTextarea);
+    await user.type(editTextarea, 'Edited question');
+
+    // Click save
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // Wait for new response
     await waitFor(() => {
-      expect(input.value).toBe('Original question');
-    });
+      expect(screen.getByText('Edited Response')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Verify the second API call
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('should truncate conversation and allow resubmission after edit', async () => {
+  it('should truncate conversation when edit is saved', async () => {
     const user = userEvent.setup();
 
     const createMockStream = (content: string) => {
@@ -163,36 +184,42 @@ describe('ChatInterface - Edit Functionality', () => {
     const editButtons = screen.getAllByLabelText('Edit');
     await user.click(editButtons[0]);
 
-    // Response should be deleted (truncated)
+    // Should show inline editor
+    const textareas = screen.getAllByRole('textbox');
+    const editTextarea = textareas.find(ta => (ta as HTMLTextAreaElement).value === 'Original question') as HTMLTextAreaElement;
+    expect(editTextarea).toBeInTheDocument();
+
+    // Response should still be visible (not truncated yet)
+    expect(screen.getByText('Response 1')).toBeInTheDocument();
+
+    // Edit the message
+    await user.clear(editTextarea);
+    await user.type(editTextarea, 'Edited question');
+
+    // Click save
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // Response should be deleted (truncated) after save
     await waitFor(() => {
       expect(screen.queryByText('Response 1')).not.toBeInTheDocument();
     }, { timeout: 3000 });
-
-    // Original question should still be there
-    expect(screen.getAllByText('Original question').length).toBeGreaterThan(0);
-
-    // Input should contain the original question
-    expect(input.value).toBe('Original question');
-
-    // Edit the message
-    await user.clear(input);
-    await user.type(input, 'Edited question');
-    await user.click(screen.getByRole('button', { name: /send/i }));
 
     // Wait for new response
     await waitFor(() => {
       expect(screen.getByText('Edited Response')).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Verify the second API call
+    // Verify the second API call was made
     expect(global.fetch).toHaveBeenCalledTimes(2);
     const secondCall = (global.fetch as jest.Mock).mock.calls[1];
     const secondCallBody = JSON.parse(secondCall[1].body);
-    expect(secondCallBody.messages).toHaveLength(1);
-    expect(secondCallBody.messages[0].content).toBe('Edited question');
+    // The last message should be the edited question
+    const lastMessage = secondCallBody.messages[secondCallBody.messages.length - 1];
+    expect(lastMessage.content).toBe('Edited question');
   });
 
-  it('should focus the input field after clicking edit', async () => {
+  it('should focus the inline editor after clicking edit', async () => {
     const user = userEvent.setup();
 
     const createMockStream = (content: string) => {
@@ -224,9 +251,11 @@ describe('ChatInterface - Edit Functionality', () => {
     const editButtons = screen.getAllByLabelText('Edit');
     await user.click(editButtons[0]);
 
-    // Input should be focused
+    // Inline editor should be focused
     await waitFor(() => {
-      expect(input).toHaveFocus();
+      const textareas = screen.getAllByRole('textbox');
+      const editTextarea = textareas.find(ta => (ta as HTMLTextAreaElement).value === 'Test question');
+      expect(editTextarea).toHaveFocus();
     });
   });
 });

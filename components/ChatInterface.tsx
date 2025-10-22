@@ -27,7 +27,6 @@ export default function ChatInterface() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [editingMessageContent, setEditingMessageContent] = useState<string | null>(null);
   const messageInputRef = useRef<MessageInputRef>(null);
 
   React.useEffect(() => {
@@ -170,7 +169,7 @@ export default function ChatInterface() {
     setIsAnimating(false);
   };
 
-  const handleEdit = (messageId: string) => {
+  const handleEdit = async (messageId: string, newContent: string) => {
     if (!currentConversation) {
       return;
     }
@@ -195,14 +194,8 @@ export default function ChatInterface() {
     // Remove this message and everything after it
     removeMessagesFrom(messageId);
 
-    // Set the message content to be edited
-    setEditingMessageContent(message.content);
-
-    // Focus the input and set its value
-    if (messageInputRef.current) {
-      messageInputRef.current.setValue(message.content);
-      messageInputRef.current.focus();
-    }
+    // Send the new content as a new message
+    await handleSendMessage(newContent, message.attachments);
   };
 
   const handleRetry = async (messageId: string) => {

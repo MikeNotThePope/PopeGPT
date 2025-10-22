@@ -19,15 +19,18 @@ interface MessageProps {
   onContentChange?: () => void;
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
-  onEdit?: (messageId: string) => void;
+  onEdit?: (messageId: string, newContent: string) => void;
 }
 
 const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry, onEdit }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedContent, setEditedContent] = React.useState(message.content);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
   const previousContentRef = useRef<string>('');
   const previousStreamingRef = useRef<boolean>(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -40,6 +43,35 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
     setCopiedMessage(true);
     setTimeout(() => setCopiedMessage(false), 2000);
   };
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setEditedContent(message.content);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(message.content);
+  };
+
+  const handleSaveEdit = () => {
+    if (editedContent.trim() && editedContent !== message.content) {
+      onEdit?.(message.id, editedContent);
+    }
+    setIsEditing(false);
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.focus();
+      // Move cursor to end
+      textareaRef.current.selectionStart = textareaRef.current.value.length;
+      textareaRef.current.selectionEnd = textareaRef.current.value.length;
+    }
+  }, [isEditing]);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
@@ -141,7 +173,21 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
         )}
 
         {isUser ? (
-          <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
+          isEditing ? (
+            <textarea
+              ref={textareaRef}
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="w-full min-h-[60px] px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white border-2 border-black dark:border-white font-bold resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = target.scrollHeight + 'px';
+              }}
+            />
+          ) : (
+            <p className="whitespace-pre-wrap leading-relaxed font-bold">{message.content}</p>
+          )
         ) : isStreaming ? (
           <SmoothStreamingText
             ref={smoothStreamingRef}
@@ -208,39 +254,64 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
         )}
         </div>
 
-        {/* Action buttons below message */}
-        <div className="self-end flex items-center gap-2">
-          <button
-            onClick={copyMessageToClipboard}
-            className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
-            title={copiedMessage ? 'Copied!' : 'Copy message'}
-            aria-label={copiedMessage ? 'Copied!' : 'Copy message'}
-          >
-            {copiedMessage ? (
-              <HiClipboardCheck className="w-4 h-4" />
-            ) : (
-              <HiClipboard className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            onClick={() => onRetry?.(message.id)}
-            className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
-            title="Retry"
-            aria-label="Retry"
-          >
-            <HiRefresh className="w-4 h-4" />
-          </button>
-          {isUser && (
+        {/* Action buttons or edit controls below message */}
+        {isEditing ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 p-3 rounded">
+              <span className="text-lg">ℹ️</span>
+              <p className="font-bold">
+                Editing this message will create a new conversation branch. You can switch between branches using the arrow navigation buttons.
+              </p>
+            </div>
+            <div className="self-end flex items-center gap-2">
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-white dark:bg-gray-800 text-black dark:text-white border-2 border-black dark:border-white font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="self-end flex items-center gap-2">
             <button
-              onClick={() => onEdit?.(message.id)}
+              onClick={copyMessageToClipboard}
               className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
-              title="Edit"
-              aria-label="Edit"
+              title={copiedMessage ? 'Copied!' : 'Copy message'}
+              aria-label={copiedMessage ? 'Copied!' : 'Copy message'}
             >
-              <HiPencil className="w-4 h-4" />
+              {copiedMessage ? (
+                <HiClipboardCheck className="w-4 h-4" />
+              ) : (
+                <HiClipboard className="w-4 h-4" />
+              )}
             </button>
-          )}
-        </div>
+            <button
+              onClick={() => onRetry?.(message.id)}
+              className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+              title="Retry"
+              aria-label="Retry"
+            >
+              <HiRefresh className="w-4 h-4" />
+            </button>
+            {isUser && (
+              <button
+                onClick={handleEditClick}
+                className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+                title="Edit"
+                aria-label="Edit"
+              >
+                <HiPencil className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
