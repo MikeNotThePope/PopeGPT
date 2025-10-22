@@ -167,6 +167,166 @@ export default function ChatInterface() {
     setIsAnimating(false);
   };
 
+  const handleRetry = async (messageId: string) => {
+    if (!currentConversation) {
+      return;
+    }
+
+    // Reset streaming states to ensure we can retry even if previous operation got stuck
+    if (isStreaming || isAnimating) {
+      setIsStreaming(false);
+      setIsAnimating(false);
+    }
+
+    // Find the message index
+    const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) {
+      return;
+    }
+
+    const messageToRetry = currentConversation.messages[messageIndex];
+
+    // Determine which messages to keep and which user message to resubmit
+    let truncatedMessages: typeof currentConversation.messages;
+    let truncateAfterMessageId: string;
+
+    if (messageToRetry.role === 'user') {
+      // Clicking retry on a user message: keep up to and including this message
+      truncatedMessages = currentConversation.messages.slice(0, messageIndex + 1);
+      truncateAfterMessageId = messageId;
+    } else {
+      // Clicking retry on an assistant message: remove this message and everything after
+      // Then find the previous user message to resubmit
+      truncatedMessages = currentConversation.messages.slice(0, messageIndex);
+
+      // Find the last user message before this point
+      const lastUserMessage = truncatedMessages.reverse().find(m => m.role === 'user');
+      if (!lastUserMessage) return; // No user message to retry
+
+      truncatedMessages = currentConversation.messages.slice(
+        0,
+        currentConversation.messages.findIndex(m => m.id === lastUserMessage.id) + 1
+      );
+      truncateAfterMessageId = lastUserMessage.id;
+    }
+
+    // Truncate all messages after the target message in the UI
+    truncateMessagesAfter(truncateAfterMessageId);
+
+    // Re-submit the user message (but don't add it to UI again - it's already there)
+    setIsStreaming(true);
+    setIsAnimating(false);
+
+    try {
+      // Prepare messages for API using the truncated messages we calculated
+      const messages = truncatedMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+        attachments: m.attachments,
+      }));
+
+      // Call streaming API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      let assistantMessage = '';
+      let hasStartedMessage = false;
+      let updateFrameId: number | null = null;
+
+      // Throttle updates using requestAnimationFrame for smooth rendering
+      const scheduleUpdate = () => {
+        if (updateFrameId) return;
+
+        updateFrameId = requestAnimationFrame(() => {
+          if (!hasStartedMessage) {
+            addMessage(assistantMessage, 'assistant');
+            hasStartedMessage = true;
+          } else {
+            updateLastMessage(assistantMessage);
+          }
+          updateFrameId = null;
+        });
+      };
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  assistantMessage += parsed.content;
+                  scheduleUpdate();
+                }
+              } catch (e) {
+                // Skip invalid JSON chunks from streaming
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('Invalid JSON chunk:', line, e);
+                }
+              }
+            }
+          }
+        }
+      } finally {
+        // Cleanup animation frame if still pending
+        if (updateFrameId) {
+          cancelAnimationFrame(updateFrameId);
+          updateFrameId = null;
+        }
+      }
+
+      // Final update to ensure all content is shown
+      if (!hasStartedMessage) {
+        addMessage(assistantMessage, 'assistant');
+      } else {
+        updateLastMessage(assistantMessage);
+      }
+
+      // Mark that we're waiting for animation to complete
+      setIsAnimating(true);
+
+      // Set isStreaming to false to trigger finishStreaming() in Message component
+      // But input will stay disabled because isAnimating is true
+      setIsStreaming(false);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error retrying message:', error);
+      }
+      addMessage(
+        'Sorry, there was an error processing your request. Please try again.',
+        'assistant'
+      );
+      // On error, stop streaming and animating immediately
+      setIsStreaming(false);
+      setIsAnimating(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-white dark:bg-black">
       <Sidebar
@@ -197,7 +357,7 @@ export default function ChatInterface() {
           isAnimating={isAnimating}
           isDark={isDark}
           onAnimationComplete={handleAnimationComplete}
-          onRetry={truncateMessagesAfter}
+          onRetry={handleRetry}
         />
         <MessageInput
           onSend={handleSendMessage}

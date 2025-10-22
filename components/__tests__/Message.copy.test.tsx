@@ -283,4 +283,72 @@ describe('Message - Copy Functionality', () => {
     expect(updatedMessagesJson).not.toHaveTextContent('Question 3');
     expect(updatedMessagesJson).not.toHaveTextContent('Response 3');
   });
+
+  it('should call handleSendMessage with original content when retry is clicked on a user question', async () => {
+    const user = userEvent.setup();
+    const mockHandleSendMessage = jest.fn();
+
+    function TestComponent() {
+      const { addMessage, getCurrentConversation, truncateMessagesAfter } = useChatContext();
+
+      React.useEffect(() => {
+        // Build conversation: Q1, R1, Q2, R2
+        addMessage('Question 1', 'user');
+        addMessage('Response 1', 'assistant');
+        addMessage('Question 2', 'user');
+        addMessage('Response 2', 'assistant');
+      }, [addMessage]);
+
+      const conversation = getCurrentConversation();
+      const messages = conversation?.messages || [];
+      const q2Message = messages[2]; // Question 2
+
+      const handleRetry = (messageId: string) => {
+        truncateMessagesAfter(messageId);
+        // Find the message that was clicked
+        const messageToRetry = messages.find(m => m.id === messageId);
+        if (messageToRetry && messageToRetry.role === 'user') {
+          // Simulate re-submission
+          mockHandleSendMessage(messageToRetry.content, messageToRetry.attachments);
+        }
+      };
+
+      return (
+        <div>
+          {q2Message && (
+            <Message
+              message={q2Message}
+              isDark={false}
+              onRetry={handleRetry}
+            />
+          )}
+          <div data-testid="message-count">{messages.length}</div>
+        </div>
+      );
+    }
+
+    render(
+      <ChatProvider>
+        <TestComponent />
+      </ChatProvider>
+    );
+
+    // Wait for initial 4 messages
+    await waitFor(() => {
+      expect(screen.getByTestId('message-count')).toHaveTextContent('4');
+    });
+
+    // Click retry on Q2
+    const retryButton = screen.getByLabelText(/retry/i);
+    await user.click(retryButton);
+
+    // Verify truncation happened (should have 3 messages: Q1, R1, Q2)
+    await waitFor(() => {
+      expect(screen.getByTestId('message-count')).toHaveTextContent('3');
+    });
+
+    // Verify handleSendMessage was called with the original question content
+    expect(mockHandleSendMessage).toHaveBeenCalledTimes(1);
+    expect(mockHandleSendMessage).toHaveBeenCalledWith('Question 2', undefined);
+  });
 });

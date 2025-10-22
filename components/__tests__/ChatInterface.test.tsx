@@ -166,4 +166,147 @@ describe('ChatInterface', () => {
     }
   });
 
+  it('should truncate messages and resubmit when retry is clicked on a user message', async () => {
+    const user = userEvent.setup();
+
+    // Create mock streams that can be read multiple times
+    const createMockStream = (content: string) => {
+      return new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(`data: {"content":"${content}"}\n\n`));
+          controller.close();
+        },
+      });
+    };
+
+    let callCount = 0;
+    (global.fetch as jest.Mock)
+      .mockImplementation(() => {
+        callCount++;
+        const response = callCount === 1 ? 'Response 1' : 'Retry Response';
+        return Promise.resolve({
+          ok: true,
+          body: createMockStream(response),
+        });
+      });
+
+    renderChatInterface();
+
+    // Send first message
+    const input = screen.getByPlaceholderText(/type your message/i);
+    await user.type(input, 'Question 1');
+    await user.click(screen.getByRole('button', { name: /send/i }));
+
+    // Wait for first response
+    await waitFor(() => {
+      expect(screen.getByText('Response 1')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Verify both messages are in the UI
+    expect(screen.getAllByText('Question 1').length).toBeGreaterThan(0);
+    expect(screen.getByText('Response 1')).toBeInTheDocument();
+
+    // Verify fetch was called once
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    // Now find and click the retry button on Question 1
+    const retryButtons = screen.getAllByLabelText('Retry');
+    // Buttons are for: Q1 (index 0) and R1 (index 1)
+    // Click retry on Q1
+    await user.click(retryButtons[0]);
+
+    // Wait for a second fetch call
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    }, { timeout: 3000 });
+
+    // Verify the second API call had only Q1
+    const secondCall = (global.fetch as jest.Mock).mock.calls[1];
+    const secondCallBody = JSON.parse(secondCall[1].body);
+    expect(secondCallBody.messages).toHaveLength(1);
+    expect(secondCallBody.messages[0].content).toBe('Question 1');
+
+    // CRITICAL: Verify that R1 was deleted from the UI
+    await waitFor(() => {
+      expect(screen.queryByText('Response 1')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Question 1 should still be there
+    expect(screen.getAllByText('Question 1').length).toBeGreaterThan(0);
+
+    // Wait for the retry response
+    await waitFor(() => {
+      expect(screen.getByText('Retry Response')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('should regenerate response when retry is clicked on an assistant message', async () => {
+    const user = userEvent.setup();
+
+    const createMockStream = (content: string) => {
+      return new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(`data: {"content":"${content}"}\n\n`));
+          controller.close();
+        },
+      });
+    };
+
+    let callCount = 0;
+    (global.fetch as jest.Mock)
+      .mockImplementation(() => {
+        callCount++;
+        const response = callCount === 1 ? 'Response 1' : 'Retry Response';
+        return Promise.resolve({
+          ok: true,
+          body: createMockStream(response),
+        });
+      });
+
+    renderChatInterface();
+
+    // Send first message
+    const input = screen.getByPlaceholderText(/type your message/i);
+    await user.type(input, 'Question 1');
+    await user.click(screen.getByRole('button', { name: /send/i }));
+
+    // Wait for first response
+    await waitFor(() => {
+      expect(screen.getByText('Response 1')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Verify fetch was called once
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    // Get all retry buttons
+    const retryButtons = screen.getAllByLabelText('Retry');
+    // retryButtons[0] is for Q1, retryButtons[1] is for R1
+    // Click retry on R1 (the assistant message)
+    await user.click(retryButtons[1]);
+
+    // Wait for the second fetch call (to regenerate the response)
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    }, { timeout: 3000 });
+
+    // Verify the second call has the previous user message
+    const secondCall = (global.fetch as jest.Mock).mock.calls[1];
+    const secondCallBody = JSON.parse(secondCall[1].body);
+    expect(secondCallBody.messages).toHaveLength(1);
+    expect(secondCallBody.messages[0].content).toBe('Question 1');
+
+    // Original response should be deleted
+    await waitFor(() => {
+      expect(screen.queryByText('Response 1')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Question should still be there
+    expect(screen.getAllByText('Question 1').length).toBeGreaterThan(0);
+
+    // New response should appear
+    await waitFor(() => {
+      expect(screen.getByText('Retry Response')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
 });
