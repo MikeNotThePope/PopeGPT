@@ -55,8 +55,18 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
   };
 
   const handleSaveEdit = () => {
+    console.log('handleSaveEdit called', {
+      editedContent,
+      originalContent: message.content,
+      trim: editedContent.trim(),
+      isDifferent: editedContent !== message.content
+    });
+
     if (editedContent.trim() && editedContent !== message.content) {
+      console.log('Calling onEdit callback');
       onEdit?.(message.id, editedContent);
+    } else {
+      console.log('Not calling onEdit - content unchanged or empty');
     }
     setIsEditing(false);
   };

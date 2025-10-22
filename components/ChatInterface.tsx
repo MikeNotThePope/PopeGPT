@@ -48,7 +48,9 @@ export default function ChatInterface() {
   const currentConversation = getCurrentConversation();
 
   const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
-    if (!currentConversation || isStreaming) return;
+    // Get fresh conversation state instead of using stale closure
+    const conversation = getCurrentConversation();
+    if (!conversation || isStreaming) return;
 
     setIsStreaming(true);
     setIsAnimating(false);
@@ -56,7 +58,7 @@ export default function ChatInterface() {
     try {
       // Prepare messages for API (before adding to state to avoid race condition)
       const messages = [
-        ...currentConversation.messages,
+        ...conversation.messages,
         { role: 'user' as const, content, attachments },
       ];
 
@@ -170,36 +172,166 @@ export default function ChatInterface() {
   };
 
   const handleEdit = async (messageId: string, newContent: string) => {
-    if (!currentConversation) {
+    console.log('handleEdit called', { messageId, newContent });
+
+    // Get fresh conversation state instead of using stale closure
+    const conversation = getCurrentConversation();
+    console.log('Current conversation:', conversation);
+
+    if (!conversation) {
+      console.log('No conversation found');
       return;
     }
 
-    // Reset streaming states
-    if (isStreaming || isAnimating) {
+    // Force reset streaming states to allow edit even if previous operation got stuck
+    console.log('Resetting streaming states - isStreaming:', isStreaming, 'isAnimating:', isAnimating);
+    if (isStreaming) {
       setIsStreaming(false);
+    }
+    if (isAnimating) {
       setIsAnimating(false);
     }
 
     // Find the message
-    const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId);
+    const messageIndex = conversation.messages.findIndex(m => m.id === messageId);
+    console.log('Message index:', messageIndex);
+
     if (messageIndex === -1) {
+      console.log('Message not found');
       return;
     }
 
-    const message = currentConversation.messages[messageIndex];
+    const message = conversation.messages[messageIndex];
+    console.log('Found message:', message);
+
     if (message.role !== 'user') {
+      console.log('Message is not a user message');
       return;
     }
+
+    // Prepare messages for API BEFORE removing (to avoid async state issues)
+    const messagesToSend = [
+      ...conversation.messages.slice(0, messageIndex),
+      { role: 'user' as const, content: newContent, attachments: message.attachments },
+    ];
 
     // Remove this message and everything after it
     removeMessagesFrom(messageId);
 
-    // Send the new content as a new message
-    await handleSendMessage(newContent, message.attachments);
+    // Add the new user message
+    addMessage(newContent, 'user', message.attachments);
+
+    // Start streaming
+    setIsStreaming(true);
+    setIsAnimating(false);
+
+    try {
+      // Call streaming API with pre-prepared messages
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: messagesToSend }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      let assistantMessage = '';
+      let hasStartedMessage = false;
+      let updateFrameId: number | null = null;
+
+      // Throttle updates using requestAnimationFrame for smooth rendering
+      const scheduleUpdate = () => {
+        if (updateFrameId) return;
+
+        updateFrameId = requestAnimationFrame(() => {
+          if (!hasStartedMessage) {
+            addMessage(assistantMessage, 'assistant');
+            hasStartedMessage = true;
+          } else {
+            updateLastMessage(assistantMessage);
+          }
+          updateFrameId = null;
+        });
+      };
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  assistantMessage += parsed.content;
+                  scheduleUpdate();
+                }
+              } catch (e) {
+                // Skip invalid JSON chunks from streaming
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('Invalid JSON chunk:', line, e);
+                }
+              }
+            }
+          }
+        }
+      } finally {
+        // Cleanup animation frame if still pending
+        if (updateFrameId) {
+          cancelAnimationFrame(updateFrameId);
+          updateFrameId = null;
+        }
+      }
+
+      // Final update to ensure all content is shown
+      if (!hasStartedMessage) {
+        addMessage(assistantMessage, 'assistant');
+      } else {
+        updateLastMessage(assistantMessage);
+      }
+
+      // Mark that we're waiting for animation to complete
+      setIsAnimating(true);
+
+      // Set isStreaming to false to trigger finishStreaming() in Message component
+      // But input will stay disabled because isAnimating is true
+      setIsStreaming(false);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error editing message:', error);
+      }
+      addMessage(
+        'Sorry, there was an error processing your request. Please try again.',
+        'assistant'
+      );
+      // On error, stop streaming and animating immediately
+      setIsStreaming(false);
+      setIsAnimating(false);
+    }
   };
 
   const handleRetry = async (messageId: string) => {
-    if (!currentConversation) {
+    // Get fresh conversation state instead of using stale closure
+    const conversation = getCurrentConversation();
+    if (!conversation) {
       return;
     }
 
@@ -210,33 +342,33 @@ export default function ChatInterface() {
     }
 
     // Find the message index
-    const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId);
+    const messageIndex = conversation.messages.findIndex(m => m.id === messageId);
     if (messageIndex === -1) {
       return;
     }
 
-    const messageToRetry = currentConversation.messages[messageIndex];
+    const messageToRetry = conversation.messages[messageIndex];
 
     // Determine which messages to keep and which user message to resubmit
-    let truncatedMessages: typeof currentConversation.messages;
+    let truncatedMessages: typeof conversation.messages;
     let truncateAfterMessageId: string;
 
     if (messageToRetry.role === 'user') {
       // Clicking retry on a user message: keep up to and including this message
-      truncatedMessages = currentConversation.messages.slice(0, messageIndex + 1);
+      truncatedMessages = conversation.messages.slice(0, messageIndex + 1);
       truncateAfterMessageId = messageId;
     } else {
       // Clicking retry on an assistant message: remove this message and everything after
       // Then find the previous user message to resubmit
-      truncatedMessages = currentConversation.messages.slice(0, messageIndex);
+      truncatedMessages = conversation.messages.slice(0, messageIndex);
 
       // Find the last user message before this point
       const lastUserMessage = truncatedMessages.reverse().find(m => m.role === 'user');
       if (!lastUserMessage) return; // No user message to retry
 
-      truncatedMessages = currentConversation.messages.slice(
+      truncatedMessages = conversation.messages.slice(
         0,
-        currentConversation.messages.findIndex(m => m.id === lastUserMessage.id) + 1
+        conversation.messages.findIndex(m => m.id === lastUserMessage.id) + 1
       );
       truncateAfterMessageId = lastUserMessage.id;
     }
