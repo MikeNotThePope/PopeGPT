@@ -10,18 +10,26 @@ interface MessageListProps {
   isStreaming: boolean;
   isAnimating?: boolean;
   isDark?: boolean;
+  isEditingMessage?: boolean;
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
-export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, onAnimationComplete, onRetry, onEdit }: MessageListProps) {
+export default function MessageList({ messages, isStreaming, isAnimating = false, isDark = false, isEditingMessage = false, onAnimationComplete, onRetry, onEdit, onEditingChange }: MessageListProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const appName = useMemo(() => `${process.env.NEXT_PUBLIC_USERNAME || 'Pope'}GPT`, []);
   const scrollAnimationFrame = useRef<number | null>(null);
 
   // Throttled scroll during streaming (~60fps max, ~16.67ms between scrolls)
+  // Skip auto-scroll if user is editing a message
   const scrollToBottomImmediate = useCallback(() => {
+    if (isEditingMessage) {
+      // Don't auto-scroll while editing
+      return;
+    }
+
     if (scrollAnimationFrame.current !== null) {
       // Already scheduled, skip this call
       return;
@@ -35,18 +43,19 @@ export default function MessageList({ messages, isStreaming, isAnimating = false
       });
       scrollAnimationFrame.current = null;
     });
-  }, [messages.length]);
+  }, [messages.length, isEditingMessage]);
 
   // Auto-scroll when new messages are added (non-streaming)
+  // Skip auto-scroll if user is editing a message
   useEffect(() => {
-    if (!isStreaming && messages.length > 0) {
+    if (!isStreaming && !isEditingMessage && messages.length > 0) {
       virtuosoRef.current?.scrollToIndex({
         index: messages.length - 1,
         align: 'end',
         behavior: 'smooth'
       });
     }
-  }, [messages.length, isStreaming]);
+  }, [messages.length, isStreaming, isEditingMessage]);
 
   // Cleanup scroll animation frame on unmount
   useEffect(() => {
@@ -111,6 +120,7 @@ export default function MessageList({ messages, isStreaming, isAnimating = false
               onAnimationComplete={onAnimationComplete}
               onRetry={onRetry}
               onEdit={onEdit}
+              onEditingChange={onEditingChange}
             />
           </div>
         );

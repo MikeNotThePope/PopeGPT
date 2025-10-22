@@ -27,6 +27,7 @@ export default function ChatInterface() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
   const messageInputRef = useRef<MessageInputRef>(null);
 
   React.useEffect(() => {
@@ -519,9 +520,11 @@ export default function ChatInterface() {
           isStreaming={isStreaming}
           isAnimating={isAnimating}
           isDark={isDark}
+          isEditingMessage={isEditingMessage}
           onAnimationComplete={handleAnimationComplete}
           onRetry={handleRetry}
           onEdit={handleEdit}
+          onEditingChange={setIsEditingMessage}
         />
         <MessageInput
           ref={messageInputRef}

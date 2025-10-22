@@ -20,9 +20,10 @@ interface MessageProps {
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
-const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry, onEdit }, ref) => {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry, onEdit, onEditingChange }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
@@ -47,11 +48,13 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedContent(message.content);
+    onEditingChange?.(true);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedContent(message.content);
+    onEditingChange?.(false);
   };
 
   const handleSaveEdit = () => {
@@ -69,6 +72,7 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
       console.log('Not calling onEdit - content unchanged or empty');
     }
     setIsEditing(false);
+    onEditingChange?.(false);
   };
 
   // Auto-resize textarea

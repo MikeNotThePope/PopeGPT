@@ -279,4 +279,184 @@ describe('Message - Edit Functionality', () => {
     const editButton = screen.queryByLabelText(/edit/i);
     expect(editButton).not.toBeInTheDocument();
   });
+
+  describe('onEditingChange callback', () => {
+    it('should call onEditingChange(true) when edit button is clicked', async () => {
+      const user = userEvent.setup();
+      const mockOnEditingChange = jest.fn();
+
+      const userMessage: MessageType = {
+        id: '1',
+        role: 'user',
+        content: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      render(
+        <Message
+          message={userMessage}
+          isDark={false}
+          onEditingChange={mockOnEditingChange}
+        />
+      );
+
+      // Click edit button
+      const editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+
+      // Should call onEditingChange with true
+      expect(mockOnEditingChange).toHaveBeenCalledTimes(1);
+      expect(mockOnEditingChange).toHaveBeenCalledWith(true);
+    });
+
+    it('should call onEditingChange(false) when save button is clicked', async () => {
+      const user = userEvent.setup();
+      const mockOnEditingChange = jest.fn();
+      const mockOnEdit = jest.fn();
+
+      const userMessage: MessageType = {
+        id: '1',
+        role: 'user',
+        content: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      render(
+        <Message
+          message={userMessage}
+          isDark={false}
+          onEdit={mockOnEdit}
+          onEditingChange={mockOnEditingChange}
+        />
+      );
+
+      // Click edit button
+      const editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+
+      // Should call onEditingChange(true)
+      expect(mockOnEditingChange).toHaveBeenCalledWith(true);
+
+      mockOnEditingChange.mockClear();
+
+      // Make a change to the content
+      const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+      await user.clear(textarea);
+      await user.type(textarea, 'Modified message');
+
+      // Click save button
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      await user.click(saveButton);
+
+      // Should call onEditingChange with false
+      expect(mockOnEditingChange).toHaveBeenCalledTimes(1);
+      expect(mockOnEditingChange).toHaveBeenCalledWith(false);
+    });
+
+    it('should call onEditingChange(false) when cancel button is clicked', async () => {
+      const user = userEvent.setup();
+      const mockOnEditingChange = jest.fn();
+
+      const userMessage: MessageType = {
+        id: '1',
+        role: 'user',
+        content: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      render(
+        <Message
+          message={userMessage}
+          isDark={false}
+          onEditingChange={mockOnEditingChange}
+        />
+      );
+
+      // Click edit button
+      const editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+
+      // Should call onEditingChange(true)
+      expect(mockOnEditingChange).toHaveBeenCalledWith(true);
+
+      mockOnEditingChange.mockClear();
+
+      // Click cancel button
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      await user.click(cancelButton);
+
+      // Should call onEditingChange with false
+      expect(mockOnEditingChange).toHaveBeenCalledTimes(1);
+      expect(mockOnEditingChange).toHaveBeenCalledWith(false);
+    });
+
+    it('should not call onEditingChange if callback is not provided', async () => {
+      const user = userEvent.setup();
+
+      const userMessage: MessageType = {
+        id: '1',
+        role: 'user',
+        content: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      // Render without onEditingChange - should not crash
+      render(<Message message={userMessage} isDark={false} />);
+
+      // Click edit button - should work without callback
+      const editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+
+      // Should show editor
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
+
+      // Click cancel - should work without callback
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      await user.click(cancelButton);
+
+      // Should hide editor
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+
+    it('should maintain editing state flow: false -> true -> false', async () => {
+      const user = userEvent.setup();
+      const mockOnEditingChange = jest.fn();
+
+      const userMessage: MessageType = {
+        id: '1',
+        role: 'user',
+        content: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      render(
+        <Message
+          message={userMessage}
+          isDark={false}
+          onEditingChange={mockOnEditingChange}
+        />
+      );
+
+      // Initially not editing - no call yet
+      expect(mockOnEditingChange).not.toHaveBeenCalled();
+
+      // Start editing
+      let editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+      expect(mockOnEditingChange).toHaveBeenNthCalledWith(1, true);
+
+      // Cancel editing
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      await user.click(cancelButton);
+      expect(mockOnEditingChange).toHaveBeenNthCalledWith(2, false);
+
+      // Edit again - need to query for button again after cancel
+      editButton = screen.getByLabelText(/edit/i);
+      await user.click(editButton);
+      expect(mockOnEditingChange).toHaveBeenNthCalledWith(3, true);
+
+      // Total calls should be 3
+      expect(mockOnEditingChange).toHaveBeenCalledTimes(3);
+    });
+  });
 });
