@@ -7,14 +7,14 @@ import { Message as MessageType } from '@/lib/types';
 jest.mock('react-virtuoso', () => {
   const React = require('react');
   return {
-    Virtuoso: React.forwardRef(({ data, itemContent, components }: any, ref: any) => {
+    Virtuoso: React.forwardRef(({ data, itemContent, components, alignToBottom }: any, ref: any) => {
       // Provide the scrollToIndex method that MessageList expects
       React.useImperativeHandle(ref, () => ({
         scrollToIndex: jest.fn(),
       }));
 
       return (
-        <div>
+        <div data-testid="virtuoso-container" data-align-to-bottom={alignToBottom !== undefined ? 'true' : 'false'}>
           {components?.Header && <components.Header />}
           {data.map((item: any, index: number) => (
             <div key={index}>{itemContent(index, item)}</div>
@@ -70,5 +70,16 @@ describe('MessageList', () => {
     expect(() => {
       render(<MessageList messages={[]} isStreaming={false} />);
     }).not.toThrow();
+  });
+
+  it('should be top-aligned, not bottom-aligned', () => {
+    render(<MessageList messages={messages} isStreaming={false} />);
+
+    const container = screen.getByTestId('virtuoso-container');
+
+    // The alignToBottom prop should NOT be present on the Virtuoso component
+    // If it's present, data-align-to-bottom will be 'true'
+    // We want it to be 'false' (meaning alignToBottom prop is not set)
+    expect(container).toHaveAttribute('data-align-to-bottom', 'false');
   });
 });

@@ -88,6 +88,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setCurrentConversationId(id);
   }, []);
 
+  const truncateMessagesAfter = useCallback((messageId: string) => {
+    setConversations(prev => {
+      return prev.map(conv => {
+        if (conv.id === currentConversationId) {
+          const messageIndex = conv.messages.findIndex(m => m.id === messageId);
+          if (messageIndex !== -1) {
+            // Keep messages up to and including the target message
+            return {
+              ...conv,
+              messages: conv.messages.slice(0, messageIndex + 1),
+            };
+          }
+        }
+        return conv;
+      });
+    });
+  }, [currentConversationId]);
+
   // Initialize with first conversation
   React.useEffect(() => {
     if (!initialized.current && conversations.length === 0) {
@@ -106,6 +124,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     getCurrentConversation,
     isStreaming,
     setIsStreaming,
+    truncateMessagesAfter,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

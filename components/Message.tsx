@@ -18,9 +18,10 @@ interface MessageProps {
   isDataStreaming?: boolean; // Separate flag for actual data streaming vs animation
   onContentChange?: () => void;
   onAnimationComplete?: () => void;
+  onRetry?: (messageId: string) => void;
 }
 
-const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete }, ref) => {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = React.useState(false);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
@@ -221,7 +222,7 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
             )}
           </button>
           <button
-            onClick={() => {/* Retry functionality to be implemented */}}
+            onClick={() => onRetry?.(message.id)}
             className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
             title="Retry"
             aria-label="Retry"

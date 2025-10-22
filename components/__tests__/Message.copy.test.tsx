@@ -1,8 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
+import React from 'react';
 import userEvent from '@testing-library/user-event';
 import Message from '@/components/Message';
 import { Message as MessageType } from '@/lib/types';
+import { ChatProvider, useChatContext } from '@/lib/ChatContext';
 
 describe('Message - Copy Functionality', () => {
   const mockWriteText = jest.fn(() => Promise.resolve());
@@ -199,5 +201,86 @@ describe('Message - Copy Functionality', () => {
     const retryButton = screen.getByLabelText(/retry/i);
     expect(retryButton).toBeInTheDocument();
     expect(retryButton.tagName).toBe('BUTTON');
+  });
+
+  it('should truncate all following messages when retry is clicked on a user question', async () => {
+    const user = userEvent.setup();
+
+    // Component to test the retry functionality with ChatContext
+    function TestComponent() {
+      const { addMessage, getCurrentConversation, truncateMessagesAfter } = useChatContext();
+
+      React.useEffect(() => {
+        // Build conversation: Q1, R1, Q2, R2, Q3, R3
+        addMessage('Question 1', 'user');
+        addMessage('Response 1', 'assistant');
+        addMessage('Question 2', 'user');
+        addMessage('Response 2', 'assistant');
+        addMessage('Question 3', 'user');
+        addMessage('Response 3', 'assistant');
+      }, [addMessage]);
+
+      const conversation = getCurrentConversation();
+      const messages = conversation?.messages || [];
+
+      // Find Q2 (index 2)
+      const q2Message = messages[2];
+
+      const handleRetry = (messageId: string) => {
+        truncateMessagesAfter(messageId);
+      };
+
+      return (
+        <div>
+          {q2Message && (
+            <Message
+              message={q2Message}
+              isDark={false}
+              onRetry={handleRetry}
+            />
+          )}
+          <div data-testid="message-count">{messages.length}</div>
+          <div data-testid="messages-json">{JSON.stringify(messages.map(m => m.content))}</div>
+        </div>
+      );
+    }
+
+    render(
+      <ChatProvider>
+        <TestComponent />
+      </ChatProvider>
+    );
+
+    // Initially should have 6 messages: Q1, R1, Q2, R2, Q3, R3
+    await waitFor(() => {
+      expect(screen.getByTestId('message-count')).toHaveTextContent('6');
+    });
+
+    // Verify we have all 6 messages
+    const messagesJson = screen.getByTestId('messages-json');
+    expect(messagesJson).toHaveTextContent('Question 1');
+    expect(messagesJson).toHaveTextContent('Response 1');
+    expect(messagesJson).toHaveTextContent('Question 2');
+    expect(messagesJson).toHaveTextContent('Response 2');
+    expect(messagesJson).toHaveTextContent('Question 3');
+    expect(messagesJson).toHaveTextContent('Response 3');
+
+    // Click retry on Q2
+    const retryButton = screen.getByLabelText(/retry/i);
+    await user.click(retryButton);
+
+    // After retry on Q2, should truncate to [Q1, R1, Q2]
+    await waitFor(() => {
+      expect(screen.getByTestId('message-count')).toHaveTextContent('3');
+    });
+
+    // Verify only Q1, R1, Q2 remain
+    const updatedMessagesJson = screen.getByTestId('messages-json');
+    expect(updatedMessagesJson).toHaveTextContent('Question 1');
+    expect(updatedMessagesJson).toHaveTextContent('Response 1');
+    expect(updatedMessagesJson).toHaveTextContent('Question 2');
+    expect(updatedMessagesJson).not.toHaveTextContent('Response 2');
+    expect(updatedMessagesJson).not.toHaveTextContent('Question 3');
+    expect(updatedMessagesJson).not.toHaveTextContent('Response 3');
   });
 });

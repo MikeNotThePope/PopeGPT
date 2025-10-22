@@ -20,6 +20,7 @@ export default function ChatInterface() {
     getCurrentConversation,
     isStreaming,
     setIsStreaming,
+    truncateMessagesAfter,
   } = useChatContext();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -196,6 +197,7 @@ export default function ChatInterface() {
           isAnimating={isAnimating}
           isDark={isDark}
           onAnimationComplete={handleAnimationComplete}
+          onRetry={truncateMessagesAfter}
         />
         <MessageInput
           onSend={handleSendMessage}

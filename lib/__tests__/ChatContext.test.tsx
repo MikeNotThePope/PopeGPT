@@ -182,4 +182,39 @@ describe('ChatContext', () => {
 
     expect(result.current.isStreaming).toBe(false);
   });
+
+  it('should truncate messages after a specific message', () => {
+    const { result } = renderHook(() => useChatContext(), {
+      wrapper: ChatProvider,
+    });
+
+    // Build conversation: Q1, R1, Q2, R2, Q3, R3
+    let q2MessageId: string;
+    act(() => {
+      result.current.addMessage('Question 1', 'user');
+      result.current.addMessage('Response 1', 'assistant');
+      result.current.addMessage('Question 2', 'user');
+      result.current.addMessage('Response 2', 'assistant');
+      result.current.addMessage('Question 3', 'user');
+      result.current.addMessage('Response 3', 'assistant');
+    });
+
+    const conversation = result.current.getCurrentConversation();
+    expect(conversation?.messages).toHaveLength(6);
+
+    // Get Q2's message ID (index 2)
+    q2MessageId = conversation!.messages[2].id;
+
+    // Truncate after Q2
+    act(() => {
+      result.current.truncateMessagesAfter(q2MessageId);
+    });
+
+    // Should now only have [Q1, R1, Q2]
+    const updatedConversation = result.current.getCurrentConversation();
+    expect(updatedConversation?.messages).toHaveLength(3);
+    expect(updatedConversation?.messages[0].content).toBe('Question 1');
+    expect(updatedConversation?.messages[1].content).toBe('Response 1');
+    expect(updatedConversation?.messages[2].content).toBe('Question 2');
+  });
 });

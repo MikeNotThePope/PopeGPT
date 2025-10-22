@@ -31,4 +31,5 @@ export interface ChatContextType {
   getCurrentConversation: () => Conversation | null;
   isStreaming: boolean;
   setIsStreaming: (value: boolean) => void;
+  truncateMessagesAfter: (messageId: string) => void;
 }
