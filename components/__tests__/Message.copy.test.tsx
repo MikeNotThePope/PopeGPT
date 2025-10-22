@@ -4,17 +4,11 @@ import userEvent from '@testing-library/user-event';
 import Message from '@/components/Message';
 import { Message as MessageType } from '@/lib/types';
 
-// Mock clipboard API
-const mockWriteText = jest.fn(() => Promise.resolve());
-Object.assign(navigator, {
-  clipboard: {
-    writeText: mockWriteText,
-  },
-});
-
 describe('Message - Copy Functionality', () => {
+  const mockWriteText = jest.fn(() => Promise.resolve());
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockWriteText.mockClear();
   });
 
   it('should display copy button on each message', () => {
@@ -31,11 +25,19 @@ describe('Message - Copy Functionality', () => {
     expect(copyButton).toBeInTheDocument();
   });
 
-  it.skip('should copy message content to clipboard when copy button is clicked', async () => {
+  it('should copy message content to clipboard when copy button is clicked', async () => {
     const user = userEvent.setup();
+
+    // Re-apply the mock after userEvent.setup()
+    Object.defineProperty(navigator.clipboard, 'writeText', {
+      value: mockWriteText,
+      writable: true,
+      configurable: true,
+    });
+
     const message: MessageType = {
       id: '1',
-      role: 'assistant',
+      role: 'user',
       content: 'This is a test message to copy',
       timestamp: Date.now(),
     };
@@ -100,7 +102,14 @@ describe('Message - Copy Functionality', () => {
     jest.useRealTimers();
   });
 
-  it.skip('should work for both user and assistant messages', async () => {
+  it('should work for both user and assistant messages', async () => {
+    // Re-apply the mock right before this test
+    Object.defineProperty(navigator.clipboard, 'writeText', {
+      value: mockWriteText,
+      writable: true,
+      configurable: true,
+    });
+
     const user = userEvent.setup();
 
     const userMessage: MessageType = {
