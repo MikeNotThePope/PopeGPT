@@ -199,10 +199,24 @@ const Message = React.memo(MessageComponent, (prevProps, nextProps) => {
     return false;
   }
 
-  // Otherwise, use normal comparison
-  return prevProps.message.content === nextProps.message.content &&
+  // If streaming just stopped, allow re-render to show final markdown
+  if (prevProps.isStreaming && !nextProps.isStreaming) {
+    return false;
+  }
+
+  // For completed messages, prevent unnecessary re-renders
+  // Deep comparison for attachments array
+  const prevAttachments = prevProps.message.attachments || [];
+  const nextAttachments = nextProps.message.attachments || [];
+  const attachmentsEqual =
+    prevAttachments.length === nextAttachments.length &&
+    prevAttachments.every((att, i) => att.id === nextAttachments[i]?.id);
+
+  return prevProps.message.id === nextProps.message.id &&
+         prevProps.message.content === nextProps.message.content &&
          prevProps.isDark === nextProps.isDark &&
-         prevProps.isStreaming === nextProps.isStreaming;
+         prevProps.isStreaming === nextProps.isStreaming &&
+         attachmentsEqual;
 });
 
 export default Message;

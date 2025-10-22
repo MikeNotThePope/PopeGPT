@@ -2,6 +2,21 @@ import { render, screen } from '@testing-library/react';
 import MessageList from '../MessageList';
 import { Message as MessageType } from '@/lib/types';
 
+// Mock react-virtuoso to render all items directly
+jest.mock('react-virtuoso', () => ({
+  Virtuoso: ({ data, itemContent, components }: any) => {
+    return (
+      <div>
+        {components?.Header && <components.Header />}
+        {data.map((item: any, index: number) => (
+          <div key={index}>{itemContent(index, item)}</div>
+        ))}
+        {components?.Footer && <components.Footer />}
+      </div>
+    );
+  },
+}));
+
 describe('MessageList', () => {
   const originalEnv = process.env;
 

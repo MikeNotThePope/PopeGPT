@@ -46,6 +46,7 @@ const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTe
   ({ messageId, finalMessageContent, isDark = false, onContentChange, charsPerSecond = 80 }, ref) => {
     const textRef = useRef<HTMLDivElement>(null);
     const [isStreamingComplete, setIsStreamingComplete] = useState(false);
+    const [isActivelyStreaming, setIsActivelyStreaming] = useState(false);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
     const copyToClipboard = (text: string, id: string) => {
@@ -67,9 +68,15 @@ const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTe
             onContentChange();
           }
         }
+
+        // Enable will-change optimization during active streaming
+        if (!isActivelyStreaming) {
+          setIsActivelyStreaming(true);
+        }
       },
       onComplete: () => {
-        // Streaming complete - switch to markdown rendering
+        // Streaming complete - remove will-change and switch to markdown rendering
+        setIsActivelyStreaming(false);
         setIsStreamingComplete(true);
       },
     });
@@ -81,6 +88,7 @@ const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTe
       reset: () => {
         smoothStreaming.reset();
         setIsStreamingComplete(false);
+        setIsActivelyStreaming(false);
       },
       skipToEnd: smoothStreaming.skipToEnd,
     }));
@@ -148,7 +156,11 @@ const SmoothStreamingText = forwardRef<SmoothStreamingTextRef, SmoothStreamingTe
       <div
         ref={textRef}
         className="whitespace-pre-wrap leading-relaxed font-bold"
-        style={{ minHeight: '1.5em' }}
+        style={{
+          minHeight: '1.5em',
+          // Apply will-change only during active streaming for GPU optimization
+          willChange: isActivelyStreaming ? 'contents' : 'auto'
+        }}
       >
         {/* Content is updated via direct DOM manipulation in onUpdate callback */}
       </div>
