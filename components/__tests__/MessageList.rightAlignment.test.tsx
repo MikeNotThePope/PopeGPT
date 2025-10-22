@@ -116,19 +116,19 @@ describe('MessageList - Right Alignment', () => {
     const userMessage = screen.getByText(/User message should be right-aligned/i);
     const assistantMessage = screen.getByText(/Assistant message should be left-aligned/i);
 
-    // Find the flex containers by traversing up to find element with flex classes
-    const userFlexContainer = userMessage.closest('.flex');
-    const assistantFlexContainer = assistantMessage.closest('.flex');
+    // Find the message-content containers (the outer flex wrapper that controls alignment)
+    const userContainer = userMessage.closest('.message-content');
+    const assistantContainer = assistantMessage.closest('.message-content');
 
     // Verify containers exist and have correct alignment classes
-    expect(userFlexContainer).toBeInTheDocument();
-    expect(assistantFlexContainer).toBeInTheDocument();
+    expect(userContainer).toBeInTheDocument();
+    expect(assistantContainer).toBeInTheDocument();
 
     // Check that user message container has justify-end class (right-aligned)
-    expect(userFlexContainer?.className).toContain('justify-end');
+    expect(userContainer?.className).toContain('justify-end');
 
     // Check that assistant message container has justify-start class (left-aligned)
-    expect(assistantFlexContainer?.className).toContain('justify-start');
+    expect(assistantContainer?.className).toContain('justify-start');
   });
 
   it('should use consistent max-width for user messages regardless of scrollbar', () => {

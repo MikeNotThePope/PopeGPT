@@ -22,6 +22,7 @@ interface MessageProps {
 
 const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
+  const [copiedMessage, setCopiedMessage] = React.useState(false);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
   const previousContentRef = useRef<string>('');
   const previousStreamingRef = useRef<boolean>(false);
@@ -30,6 +31,12 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
     navigator.clipboard.writeText(text);
     setCopiedCode(id);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const copyMessageToClipboard = () => {
+    navigator.clipboard.writeText(message.content);
+    setCopiedMessage(true);
+    setTimeout(() => setCopiedMessage(false), 2000);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -85,13 +92,14 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
         isUser ? 'justify-end' : 'justify-start'
       } mb-5 message-content`}
     >
-      <div
-        className={`max-w-[80%] border-4 px-5 py-4 transition-all ${
-          isUser
-            ? 'bg-blue-400 dark:bg-purple-500 text-black dark:text-white border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
-            : 'bg-white dark:bg-gray-900 text-black dark:text-white border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]'
-        }`}
-      >
+      <div className="flex flex-col gap-2 max-w-[80%]">
+        <div
+          className={`border-4 px-5 py-4 transition-all ${
+            isUser
+              ? 'bg-blue-400 dark:bg-purple-500 text-black dark:text-white border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+              : 'bg-white dark:bg-gray-900 text-black dark:text-white border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]'
+          }`}
+        >
         {/* Display file attachments */}
         {message.attachments && message.attachments.length > 0 && (
           <div className="mb-3 space-y-2">
@@ -196,6 +204,21 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
             </ReactMarkdown>
           </div>
         )}
+        </div>
+
+        {/* Copy button below message */}
+        <button
+          onClick={copyMessageToClipboard}
+          className="self-end p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+          title={copiedMessage ? 'Copied!' : 'Copy message'}
+          aria-label={copiedMessage ? 'Copied!' : 'Copy message'}
+        >
+          {copiedMessage ? (
+            <HiClipboardCheck className="w-4 h-4" />
+          ) : (
+            <HiClipboard className="w-4 h-4" />
+          )}
+        </button>
       </div>
     </div>
   );
