@@ -8,7 +8,7 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { Message as MessageType } from '@/lib/types';
 import { STREAMING_CHARS_PER_SECOND } from '@/lib/constants';
-import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload, HiRefresh } from 'react-icons/hi';
+import { HiClipboard, HiClipboardCheck, HiDocumentText, HiDownload, HiRefresh, HiPencil } from 'react-icons/hi';
 import SmoothStreamingText, { SmoothStreamingTextRef } from './SmoothStreamingText';
 
 interface MessageProps {
@@ -19,9 +19,10 @@ interface MessageProps {
   onContentChange?: () => void;
   onAnimationComplete?: () => void;
   onRetry?: (messageId: string) => void;
+  onEdit?: (messageId: string) => void;
 }
 
-const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry }, ref) => {
+const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ message, isDark = false, isStreaming = false, isDataStreaming, onContentChange, onAnimationComplete, onRetry, onEdit }, ref) => {
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = React.useState(false);
   const smoothStreamingRef = useRef<SmoothStreamingTextRef>(null);
@@ -229,6 +230,16 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(({ messa
           >
             <HiRefresh className="w-4 h-4" />
           </button>
+          {isUser && (
+            <button
+              onClick={() => onEdit?.(message.id)}
+              className="p-1 text-gray-500 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1 text-xs"
+              title="Edit"
+              aria-label="Edit"
+            >
+              <HiPencil className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>

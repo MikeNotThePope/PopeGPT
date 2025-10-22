@@ -351,4 +351,66 @@ describe('Message - Copy Functionality', () => {
     expect(mockHandleSendMessage).toHaveBeenCalledTimes(1);
     expect(mockHandleSendMessage).toHaveBeenCalledWith('Question 2', undefined);
   });
+
+  it('should show an edit button on user questions to the right of the retry button', () => {
+    const userMessage: MessageType = {
+      id: '1',
+      role: 'user',
+      content: 'What is the weather today?',
+      timestamp: Date.now(),
+    };
+
+    render(<Message message={userMessage} isDark={false} />);
+
+    // Verify copy button exists
+    const copyButton = screen.getByLabelText('Copy message');
+    expect(copyButton).toBeInTheDocument();
+
+    // Verify retry button exists
+    const retryButton = screen.getByLabelText(/retry/i);
+    expect(retryButton).toBeInTheDocument();
+
+    // Verify edit button exists
+    const editButton = screen.getByLabelText(/edit/i);
+    expect(editButton).toBeInTheDocument();
+    expect(editButton.tagName).toBe('BUTTON');
+
+    // Verify button order: copy, retry, then edit (from left to right)
+    const actionButtons = screen.getAllByRole('button').filter(btn =>
+      btn.getAttribute('aria-label')?.match(/copy message|retry|edit/i)
+    );
+
+    expect(actionButtons.length).toBe(3);
+    expect(actionButtons[0].getAttribute('aria-label')).toMatch(/copy message/i);
+    expect(actionButtons[1].getAttribute('aria-label')).toMatch(/retry/i);
+    expect(actionButtons[2].getAttribute('aria-label')).toMatch(/edit/i);
+  });
+
+  it('should NOT show an edit button on assistant messages', () => {
+    const assistantMessage: MessageType = {
+      id: '2',
+      role: 'assistant',
+      content: 'The weather is sunny today.',
+      timestamp: Date.now(),
+    };
+
+    render(<Message message={assistantMessage} isDark={false} />);
+
+    // Verify copy and retry buttons exist
+    const copyButton = screen.getByLabelText('Copy message');
+    expect(copyButton).toBeInTheDocument();
+
+    const retryButton = screen.getByLabelText(/retry/i);
+    expect(retryButton).toBeInTheDocument();
+
+    // Verify edit button does NOT exist
+    const editButton = screen.queryByLabelText(/edit/i);
+    expect(editButton).not.toBeInTheDocument();
+
+    // Verify only 2 action buttons (copy and retry)
+    const actionButtons = screen.getAllByRole('button').filter(btn =>
+      btn.getAttribute('aria-label')?.match(/copy message|retry|edit/i)
+    );
+    expect(actionButtons.length).toBe(2);
+  });
 });
