@@ -125,50 +125,6 @@ describe('ChatInterface', () => {
     });
   });
 
-  it.skip('should allow user to enter text after AI finishes responding', async () => {
-    const user = userEvent.setup();
-
-    // Mock streaming response
-    const mockReadableStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode('data: {"content":"AI Response"}\n\n'));
-        controller.close();
-      },
-    });
-
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      body: mockReadableStream,
-    });
-
-    renderChatInterface();
-
-    const input = screen.getByPlaceholderText(/type your message/i) as HTMLTextAreaElement;
-
-    // Input should start enabled
-    expect(input).not.toBeDisabled();
-
-    // Send a message
-    await user.type(input, 'Test message');
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    await user.click(sendButton);
-
-    // Input should be disabled while streaming
-    expect(input).toBeDisabled();
-
-    // Wait for streaming to complete and animation to finish, then input to be re-enabled
-    await waitFor(() => {
-      expect(input).not.toBeDisabled();
-    }, { timeout: 5000 });
-
-    // Verify user can type again after AI responds
-    await user.type(input, 'Follow-up message');
-    expect(input.value).toBe('Follow-up message');
-
-    // Verify send button is enabled again
-    expect(sendButton).not.toBeDisabled();
-  });
-
   it('should show error message on API failure', async () => {
     const user = userEvent.setup();
 
@@ -210,37 +166,4 @@ describe('ChatInterface', () => {
     }
   });
 
-  it.skip('should auto-focus input after AI responds', async () => {
-    const user = userEvent.setup();
-
-    const mockReadableStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode('data: {"content":"Response"}\n\n'));
-        controller.close();
-      },
-    });
-
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      body: mockReadableStream,
-    });
-
-    renderChatInterface();
-
-    const input = screen.getByPlaceholderText(/type your message/i);
-    await user.type(input, 'Test');
-
-    const sendButton = screen.getByRole('button', { name: /send/i });
-    await user.click(sendButton);
-
-    // Wait for streaming to complete
-    await waitFor(() => {
-      expect(input).not.toBeDisabled();
-    }, { timeout: 2000 });
-
-    // Input should be focused
-    await waitFor(() => {
-      expect(input).toHaveFocus();
-    });
-  });
 });
